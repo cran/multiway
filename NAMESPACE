@@ -1,0 +1,9 @@
+exportPattern("^[[:alpha:]]+")
+
+import(parallel)
+
+S3method(fitted, indscal)
+S3method(fitted, parafac)
+S3method(fitted, parafac2)
+S3method(fitted, sca)
+S3method(fitted, tucker)
