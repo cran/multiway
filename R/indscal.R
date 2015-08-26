@@ -1,11 +1,12 @@
 indscal <- 
   function(X,nfac,nstart=10,const=NULL,maxit=500,
            type=c("dissimilarity","similarity"),
-           ctol=10^-7,parallel=FALSE,cl=NULL){
+           ctol=10^-4,parallel=FALSE,cl=NULL,
+           output=c("best","all")){
     # Individual Differences Scaling (INDSCAL)
     # via alternating least squares (ALS) with optional constraints
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: April 9, 2015
+    # last updated: June 19, 2015
     
     # check 'X' input
     if(is.list(X)){
@@ -61,23 +62,37 @@ indscal <-
     } else {
       pfaclist <- vector("list",nstart)
       for(j in 1:nstart){
-        pfaclist[[j]] <- parafac_3way(X,nfac,xcx,c(rep(const[1],2),const[2]),maxit,ctol)
+        pfaclist[[j]] <- parafac_3way(data=X,nfac=nfac,xcx=xcx,
+                                      const=c(rep(const[1],2),const[2]),maxit=maxit,ctol=ctol)
       }
     }
-    widx <- which.max(sapply(pfaclist,function(x) x$Rsq))
-    pfac <- pfaclist[[widx]]
-    adg <- colMeans(pfac$A^2)
-    pfac$C <- pfac$C%*%(diag(nfac)*(adg^0.5))
-    if(const[2]==0L){
-      csg <- sign(colSums(pfac$C^3))
-      pfac$C <- pfac$C%*%(diag(nfac)*(csg))
-      if(any(sign(pfac$C)<0L)){warning("Unconstrained ALS produced negative C weights. \nTry refitting with nonnegativity for Mode C, e.g., const=c(0,2)")}
-    }
-    bsg <- sign(colSums(pfac$B^3))
-    pfac$B <- pfac$B%*%(diag(nfac)*(bsg))
-    inds <- list(B=pfac$B,C=pfac$C,Rsq=pfac$Rsq,iter=pfac$iter,
-                 cflag=pfac$cflag,const=const,strain=(1-pfac$Rsq)*sum(X^2))
-    class(inds) <- "indscal"
-    return(inds)
     
-  }
+    # output results
+    if(output[1]=="best"){
+      widx <- which.max(sapply(pfaclist,function(x) x$Rsq))
+      pfac <- pfaclist[[widx]]
+      if(const[2]==0L){
+        csg <- sign(colSums(pfac$C^3))
+        pfac$C <- pfac$C%*%(diag(nfac)*(csg))
+      }
+      bsg <- sign(colSums(pfac$B^3))
+      pfac$B <- pfac$B%*%(diag(nfac)*(bsg))
+      pfac <- c(pfac[2:6],list(const=const,strain=(1-pfac$Rsq)*xcx))
+      class(pfac) <- "indscal"
+      return(pfac)
+    } else {
+      pfaclist <- lapply(pfaclist, function(x){
+        if(const[2]==0L){
+          csg <- sign(colSums(x$C^3))
+          x$C <- x$C%*%(diag(nfac)*(csg))
+        }
+        bsg <- sign(colSums(x$B^3))
+        x$B <- x$B%*%(diag(nfac)*(bsg))
+        x <- c(x[2:6],list(const=const,strain=(1-x$Rsq)*xcx))
+        class(x) <- "indscal"
+        x
+      })
+      return(pfaclist)
+    }
+    
+  } # end indscal.R

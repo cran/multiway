@@ -15,7 +15,8 @@ Weight matrices are estimated using an alternating least squares algorithm with 
 \usage{
 indscal(X,nfac,nstart=10,const=NULL,maxit=500,
         type=c("dissimilarity","similarity"),
-        ctol=10^-7,parallel=FALSE,cl=NULL)
+        ctol=10^-4,parallel=FALSE,cl=NULL,
+        output=c("best","all"))
 }
 \arguments{
   \item{X}{
@@ -34,9 +35,8 @@ indscal(X,nfac,nstart=10,const=NULL,maxit=500,
   Maximum number of iterations.
 }
   \item{type}{
-  Logical indicaing if \code{X} contains dissimilarity data (default) or similarity data.
+  Character indicating if \code{X} contains dissimilarity data (default) or similarity data.
 }
-  
   \item{ctol}{
   Convergence tolerance.
 }
@@ -46,8 +46,12 @@ indscal(X,nfac,nstart=10,const=NULL,maxit=500,
   \item{cl}{
   Cluster created by \code{\link{makeCluster}}. Only used when \code{parallel=TRUE}.
 }
+  \item{output}{
+  Output the best solution (default) or output all \code{nstart} solutions.
+}
 }
 \value{
+If \code{output="best"}, returns an object of class \code{"indscal"} with the following elements:
 \item{B}{Mode B weight matrix.}
 \item{C}{Mode C weight matrix.}
 \item{Rsq}{R-squared value.}
@@ -55,6 +59,8 @@ indscal(X,nfac,nstart=10,const=NULL,maxit=500,
 \item{cflag}{Convergence flag.}
 \item{const}{Same as input.}
 \item{strain}{MDS loss function.}
+
+Otherwise returns a list of length \code{nstart} where each element is an object of class \code{"indscal"}.
 }
 \references{
 Bro, R., & De Jong, S. (1997). A fast non-negativity-constrained least squares algorithm. \emph{Journal of Chemometrics, 11}, 393-401.
@@ -69,7 +75,7 @@ Harshman, R. A., & Lundy, M. E. (1994). PARAFAC: Parallel factor analysis. \emph
 Nathaniel E. Helwig <helwig@umn.edu>
 }
 \note{
-Default use is 10 random strarts (\code{nstart=10}) with 500 maximum iterations of the ALS algorithm for each start (\code{maxit=500}) using a relative convergence tolerace of 10^-7 (\code{ctol=10^-7}).
+Default use is 10 random strarts (\code{nstart=10}) with 500 maximum iterations of the ALS algorithm for each start (\code{maxit=500}) using a convergence tolerance of 10^-4 (\code{ctol=10^-4}). The algorithm is determined to have converged once the change in R^2 is less than or equal to \code{ctol}.
 
 Input \code{const} should be a two element integer vector giving constraints for Modes B and C. There are four possible options:
 \tabular{rl}{
@@ -106,6 +112,24 @@ imod$Rsq
 
 # check solution
 Xhat <- fitted(imod)
+sum((array(apply(X,3,ed2sp),dim=dim(X))-Xhat)^2)
+imod$strain
+
+# reorder and resign factors
+imod$B[1:4,]
+imod <- reorder(imod, 2:1)
+imod$B[1:4,]
+imod <- resign(imod, newsign=c(1,-1))
+imod$B[1:4,]
+sum((array(apply(X,3,ed2sp),dim=dim(X))-Xhat)^2)
+imod$strain
+
+# rescale factors
+colSums(imod$B^2)
+colSums(imod$C^2)
+imod <- rescale(imod, mode="C")
+colSums(imod$B^2)
+colSums(imod$C^2)
 sum((array(apply(X,3,ed2sp),dim=dim(X))-Xhat)^2)
 imod$strain
 

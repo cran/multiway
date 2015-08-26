@@ -2,11 +2,11 @@ sca <-
   function(X,nfac,nstart=10,maxit=500,
            type=c("sca-p","sca-pf2","sca-ind","sca-ecp"),
            rotation=c("none","varimax","promax"),
-           ctol=10^-7,parallel=FALSE,cl=NULL){
+           ctol=10^-4,parallel=FALSE,cl=NULL){
     # Simultaneous Component Analysis
     # via alternating least squares (ALS) or closed-form solution
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: April 9, 2015
+    # last updated: August 19, 2015
     
     # check 'X' input
     if(is.array(X)){
@@ -73,10 +73,12 @@ sca <-
       } 
       Dmats <- vector("list",xdim[3])
       dfc <- sse <- 0
+      Cmat <- matrix(0,xdim[3],nfac)
       for(kk in 1:xdim[3]){
         newdim <- dim(X[[kk]])[1]
         dinds <- 1:newdim + dfc
         Dmats[[kk]] <- as.matrix(Dmat[dinds,])
+        Cmat[kk,] <- sqrt(colSums(Dmats[[kk]]^2)/newdim)
         sse <- sse + sumsq(X[[kk]]-tcrossprod(Dmats[[kk]],Bmat))
         dfc <- dfc + newdim
       }
@@ -84,7 +86,7 @@ sca <-
       Rsq <- 1 - sse/xcx
       iter <- 1
       cflag <- 0
-      Phimat <- Cmat <- NULL
+      Phimat <- NULL
     } else if(type[1]=="sca-pf2"){
       if(parallel){
         nstartlist <- vector("list",nstart)
@@ -94,7 +96,7 @@ sca <-
       } else {
         pfaclist <- vector("list",nstart)
         for(j in 1:nstart){
-          pfaclist[[j]] <- parafac2_3way(X,nfac,xcx,maxit=maxit,ctol=ctol)
+          pfaclist[[j]] <- parafac2_3way(data=X,nfac=nfac,xcx=xcx,maxit=maxit,ctol=ctol)
         }
       }
       widx <- which.max(sapply(pfaclist,function(x) x$Rsq))
@@ -121,13 +123,13 @@ sca <-
       } else {
         pfaclist <- vector("list",nstart)
         for(j in 1:nstart){
-          pfaclist[[j]] <- parafac2_3way(X,nfac,xcx,const=c(1L,0L,0L),maxit=maxit,ctol=ctol)
+          pfaclist[[j]] <- parafac2_3way(data=X,nfac=nfac,xcx=xcx,const=c(1L,0L,0L),maxit=maxit,ctol=ctol)
         }
       }
       widx <- which.max(sapply(pfaclist,function(x) x$Rsq))
       scamod <- pfaclist[[widx]]
       rm(pfaclist)
-      dg <- diag(scamod$A$G)
+      dg <- sqrt(colSums(scamod$A$G^2))
       Bmat <- scamod$B
       Cmat <- matrix(0,xdim[3],nfac)
       Dmats <- vector("list",xdim[3])
@@ -151,12 +153,16 @@ sca <-
       } else {
         pfaclist <- vector("list",nstart)
         for(j in 1:nstart){
-          pfaclist[[j]] <- parafac2_3way(X,nfac,xcx,const=c(1L,0L,0L),maxit=maxit,ctol=ctol,Cfixed=Cfixed)
+          pfaclist[[j]] <- parafac2_3way(data=X,nfac=nfac,xcx=xcx,const=c(1L,0L,0L),maxit=maxit,ctol=ctol,Cfixed=Cfixed)
         }
       }
       widx <- which.max(sapply(pfaclist,function(x) x$Rsq))
       scamod <- pfaclist[[widx]]
       rm(pfaclist)
+      fordr <- order(colSums(scamod$B^2), decreasing = TRUE)
+      scamod$A$G <- as.matrix(scamod$A$G[,fordr])
+      scamod$B <- as.matrix(scamod$B[,fordr])
+      scamod$C <- as.matrix(scamod$C[,fordr])
       Bmat <- scamod$B
       rotmat <- diag(nfac)
       if(rotation=="varimax"){
@@ -167,11 +173,11 @@ sca <-
         Bmat <- Bmat%*%rotmat
         rotmat <- t(solve(rotmat))
       } 
-      Cmat <- NULL
       Dmats <- vector("list",xdim[3])
       for(kk in 1:xdim[3]){
         Dmats[[kk]] <- scamod$A$H[[kk]]%*%scamod$A$G%*%(diag(nfac)*scamod$C[kk,])%*%rotmat
       }
+      Cmat <- scamod$C/nks
       Rsq <- scamod$Rsq
       iter <- scamod$iter
       cflag <- scamod$cflag

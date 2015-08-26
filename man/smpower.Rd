@@ -4,7 +4,7 @@
 Symmetric Matrix Power
 }
 \description{
-Raise symmetric matrix to specified power. Default calculates symmetric square-root.
+Raise symmetric matrix to specified power. Default calculates symmetric square root.
 }
 \usage{
 smpower(X,power=0.5,tol=.Machine$double.eps)

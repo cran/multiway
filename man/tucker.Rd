@@ -23,7 +23,8 @@ Weight matrices are estimated using an alternating least squares algorithm.
 tucker(X,nfac,nstart=10,maxit=500,Afixed=NULL,
        Bfixed=NULL,Cfixed=NULL,Dfixed=NULL,
        Bstart=NULL,Cstart=NULL,Dstart=NULL,
-       ctol=10^-7,parallel=FALSE,cl=NULL)
+       ctol=10^-4,parallel=FALSE,cl=NULL,
+       output=c("best","all"))
 }
 \arguments{
   \item{X}{
@@ -68,8 +69,12 @@ tucker(X,nfac,nstart=10,maxit=500,Afixed=NULL,
   \item{cl}{
   Cluster created by \code{\link{makeCluster}}. Only used when \code{parallel=TRUE}.
 }
+  \item{output}{
+  Output the best solution (default) or output all \code{nstart} solutions.
+}
 }
 \value{
+If \code{output="best"}, returns an object of class \code{"tucker"} with the following elements:
 \item{A}{Mode A weight matrix.}
 \item{B}{Mode B weight matrix.}
 \item{C}{Mode C weight matrix.}
@@ -78,6 +83,8 @@ tucker(X,nfac,nstart=10,maxit=500,Afixed=NULL,
 \item{Rsq}{R-squared value.}
 \item{iter}{Number of iterations.}
 \item{cflag}{Convergence flag.}
+
+Otherwise returns a list of length \code{nstart} where each element is an object of class \code{"tucker"}.
 }
 \references{
 Kroonenberg, P. M., & de Leeuw, J. (1980). Principal component analysis of three-mode data by means of alternating least squares algorithms. \emph{Psychometrika, 45}, 69-97.
@@ -88,7 +95,7 @@ Tucker, L. R. (1966). Some mathematical notes on three-mode factor analysis. \em
 Nathaniel E. Helwig <helwig@umn.edu>
 }
 \note{
-Default use is 10 random strarts (\code{nstart=10}) with 500 maximum iterations of the ALS algorithm for each start (\code{maxit=500}) using a relative convergence tolerace of 10^-7 (\code{ctol=10^-7}).
+Default use is 10 random strarts (\code{nstart=10}) with 500 maximum iterations of the ALS algorithm for each start (\code{maxit=500}) using a convergence tolerance of 10^-4 (\code{ctol=10^-4}). The algorithm is determined to have converged once the change in R^2 is less than or equal to \code{ctol}.
 
 Output \code{cflag} gives convergence information: \code{cflag=0} if ALS algorithm converged normally, and \code{cflag=1} if maximum iteration limit was reached before convergence.
 }
@@ -111,7 +118,7 @@ Cmat <- svd(matrix(rnorm(mydim[3]*nf[3]),mydim[3],nf[3]),nu=nf[3])$u
 Gmat <- array(rnorm(prod(nf)),dim=nf)
 Xmat <- array(tcrossprod(Amat\%*\%matrix(Gmat,nf[1],nf[2]*nf[3]),kronecker(Cmat,Bmat)),dim=mydim)
 Emat <- array(rnorm(prod(mydim)),dim=mydim)
-Emat <- nrescale(Emat,0,sumsq(Xmat))   # SNR=1
+Emat <- nscale(Emat,0,sumsq(Xmat))   # SNR=1
 X <- Xmat + Emat
 
 # fit Tucker model
@@ -119,6 +126,31 @@ tuck <- tucker(X,nfac=nf,nstart=1)
 tuck$Rsq
 
 # check solution
+Xhat <- fitted(tuck)
+sum((Xmat-Xhat)^2)/prod(mydim)
+
+# reorder mode="A"
+tuck$A[1:4,]
+tuck$G
+tuck <- reorder(tuck, neworder=c(3,1,2), mode="A")
+tuck$A[1:4,]
+tuck$G
+Xhat <- fitted(tuck)
+sum((Xmat-Xhat)^2)/prod(mydim)
+
+# reorder mode="B"
+tuck$B[1:4,]
+tuck$G
+tuck <- reorder(tuck, neworder=2:1, mode="B")
+tuck$B[1:4,]
+tuck$G
+Xhat <- fitted(tuck)
+sum((Xmat-Xhat)^2)/prod(mydim)
+
+# resign mode="C"
+tuck$C[1:4,]
+tuck <- resign(tuck, mode="C")
+tuck$C[1:4,]
 Xhat <- fitted(tuck)
 sum((Xmat-Xhat)^2)/prod(mydim)
 
@@ -137,7 +169,7 @@ Gmat <- array(rnorm(prod(nf)),dim=nf)
 Xmat <- array(tcrossprod(Amat\%*\%matrix(Gmat,nf[1],prod(nf[2:4])),
                       kronecker(Dmat,kronecker(Cmat,Bmat))),dim=mydim)
 Emat <- array(rnorm(prod(mydim)),dim=mydim)
-Emat <- nrescale(Emat,0,sumsq(Xmat))   # SNR=1
+Emat <- nscale(Emat,0,sumsq(Xmat))   # SNR=1
 X <- Xmat + Emat
 
 # fit Tucker model
@@ -163,7 +195,7 @@ Cmat <- svd(matrix(rnorm(mydim[3]*nf[3]),mydim[3],nf[3]),nu=nf[3])$u
 Gmat <- array(rnorm(prod(nf)),dim=nf)
 Xmat <- array(tcrossprod(Amat\%*\%matrix(Gmat,nf[1],nf[2]*nf[3]),kronecker(Cmat,Bmat)),dim=mydim)
 Emat <- array(rnorm(prod(mydim)),dim=mydim)
-Emat <- nrescale(Emat,0,sumsq(Xmat))   # SNR=1
+Emat <- nscale(Emat,0,sumsq(Xmat))   # SNR=1
 X <- Xmat + Emat
 
 # fit Tucker model (10 random starts -- sequential computation)

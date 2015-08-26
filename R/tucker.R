@@ -2,11 +2,12 @@ tucker <-
   function(X,nfac,nstart=10,maxit=500,Afixed=NULL,
            Bfixed=NULL,Cfixed=NULL,Dfixed=NULL,
            Bstart=NULL,Cstart=NULL,Dstart=NULL,
-           ctol=10^-7,parallel=FALSE,cl=NULL){
+           ctol=10^-4,parallel=FALSE,cl=NULL,
+           output=c("best","all")){
     # 3-way or 4-way Tucker model
     # via alternating least squares (ALS)
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: April 9, 2015
+    # last updated: June 19, 2015
     
     # check 'X' input
     xdim <- dim(X)
@@ -73,13 +74,11 @@ tucker <-
       } else {
         tucklist <- vector("list",nstart)
         for(j in 1:nstart){
-          tucklist[[j]] <- tucker_3way(X,nfac,xcx,maxit,ctol,Afixed,Bfixed,Cfixed,Bstart,Cstart)
+          tucklist[[j]] <- tucker_3way(data=X,nfac=nfac,xcx=xcx,maxit=maxit,ctol=ctol,
+                                       Afixed=Afixed,Bfixed=Bfixed,Cfixed=Cfixed,
+                                       Bstart=Bstart,Cstart=Cstart)
         }
-      }
-      widx <- which.max(sapply(tucklist,function(x) x$Rsq))
-      tuck <- tucklist[[widx]]
-      class(tuck) <- "tucker"
-      return(tuck)
+      } # end if(parallel)
     } else if(lxdim==4L){
       # check 'Dfixed' and 'Dstart' inputs
       if(!is.null(Dfixed)){
@@ -101,13 +100,22 @@ tucker <-
       } else {
         tucklist <- vector("list",nstart)
         for(j in 1:nstart){
-          tucklist[[j]] <- tucker_4way(X,nfac,xcx,maxit,ctol,Afixed,Bfixed,Cfixed,Dfixed,Bstart,Cstart,Dstart)
+          tucklist[[j]] <- tucker_4way(data=X,nfac=nfac,xcx=xcx,maxit=maxit,ctol=ctol,
+                                       Afixed=Afixed,Bfixed=Bfixed,Cfixed=Cfixed,Dfixed=Dfixed,
+                                       Bstart=Bstart,Cstart=Cstart,Dstart=Dstart)
         }
-      }
+      } # end if(parallel)
+    } # end if(lxdim==3L) 
+    
+    # output results
+    if(output[1]=="best"){
       widx <- which.max(sapply(tucklist,function(x) x$Rsq))
       tuck <- tucklist[[widx]]
       class(tuck) <- "tucker"
       return(tuck)
-    } 
+    } else {
+      tucklist <- lapply(tucklist, function(x) {class(x) <- "tucker"; x})
+      return(tucklist)
+    }
     
-  }
+  } # end tucker.R

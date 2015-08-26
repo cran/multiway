@@ -1,0 +1,56 @@
+Changes from ver 1.0-0 to ver 1.0-1     [Aug-26-2015]
+   1) multiway-package
+	*   Speed-ups for indscal, parafac, and parafac2
+	*   congru: new function to calculate Tucker's congruence coefficient
+	*   Changes in convergence tolerance for all functions
+	*   Can now output all random starts (instead of only best)
+	*   Renamed function "nrescale" to "nscale" ("nrescale" still works)
+	*   Added "reorder" functionality for all methods
+	*   Added "rescale" functionality for all methods
+	*   Added "resign" functionality for all methods
+	*   Bug fixes for SCA-IND model with type="sca-ecp"
+	*   More customizability for parafac2 (fixed correlation structures)
+   2) congru
+	*   New function to calculate Tucker's congruence coefficient
+	*   Functionality is similar to cor and cov functions in R
+   3) indscal
+	*   Improvements to internals (speed-ups)
+	*   Now uses change in R^2 to determine ALS convergence
+	*   Default convergence tolerance now 10^-4
+	*   Can now output all random starts (instead of only best)
+	*   Can use "reorder" to reorder factors of fit INDSCAL model
+	*   Can use "rescale" to rescale factors of fit INDSCAL model
+	*   Can use "resign" to resign factors of fit INDSCAL model
+   4) parafac
+	*   Improvements to internals (speed-ups)
+	*   Now uses change in R^2 to determine ALS convergence
+	*   Default convergence tolerance now 10^-4
+	*   Can now output all random starts (instead of only best)
+	*   Can use "reorder" to reorder factors of fit Parafac model
+	*   Can use "rescale" to rescale factors of fit Parafac model
+	*   Can use "resign" to resign factors of fit Parafac model
+   5) parafac2
+	*   Improvements to internals (speed-ups)
+	*   Now uses change in R^2 to determine ALS convergence
+	*   Default convergence tolerance now 10^-4
+	*   Can now output all random starts (instead of only best)
+	*   Can use "reorder" to reorder factors of fit Parafac2 model
+	*   Can use "rescale" to rescale factors of fit Parafac2 model
+	*   Can use "resign" to resign factors of fit Parafac2 model
+	*   New inputs:  Gfixed and Gstart
+	*   Default now randomly generates C weights from uniform[0,1]
+   6) sca
+	*   Improvements to internals (speed-ups)
+	*   Now uses change in R^2 to determine ALS convergence
+	*   Default convergence tolerance now 10^-4
+	*   Can use "reorder" to reorder factors of fit SCA model
+	*   Can use "rescale" to rescale factors of fit SCA model
+	*   Can use "resign" to resign factors of fit SCA model
+	*   Bug fix for reporting of C weights with type="sca-ecp"
+   7) tucker
+	*   Now uses change in R^2 to determine ALS convergence
+	*   Default convergence tolerance now 10^-4
+	*   Can now output all random starts (instead of only best)
+	*   Can use "reorder" to reorder factors of fit Tucker model
+	*   Can use "rescale" to rescale factors of fit Tucker model
+	*   Can use "resign" to resign factors of fit Tucker model

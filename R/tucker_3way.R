@@ -1,10 +1,10 @@
 tucker_3way <-
   function(data,nfac,xcx=sumsq(data),maxit=500,
-           ctol=10^-7,Afixed=NULL,Bfixed=NULL,Cfixed=NULL,
+           ctol=10^-4,Afixed=NULL,Bfixed=NULL,Cfixed=NULL,
            Bstart=NULL,Cstart=NULL){
     # 3-way Tucker model
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: April 9, 2015
+    # last updated: August 26, 2015
     
     ### initialize reshaped data matrices
     xdims <- dim(data)
@@ -46,7 +46,8 @@ tucker_3way <-
       # Step 4: update G and check for convergence
       Ga <- crossprod(Anew,Xa%*%kronecker(Cnew,Bnew))
       ssenew <- xcx - sum(rowSums(Ga^2))
-      vtol <- (sseold-ssenew)/sseold
+      #vtol <- (sseold-ssenew)/sseold
+      vtol <- (sseold - ssenew) / xcx
       Aold <- Anew
       Bold <- Bnew
       Cold <- Cnew

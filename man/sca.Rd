@@ -23,7 +23,7 @@ where \code{Phi[[k]]} is specific to the \code{k}-th level of Mode C, \code{Phi}
 sca(X,nfac,nstart=10,maxit=500,
     type=c("sca-p","sca-pf2","sca-ind","sca-ecp"),
     rotation=c("none","varimax","promax"),
-    ctol=10^-7,parallel=FALSE,cl=NULL)
+    ctol=10^-4,parallel=FALSE,cl=NULL)
 }
 \arguments{
   \item{X}{
@@ -74,7 +74,7 @@ Timmerman, M. E., & Kiers, H. A. L. (2003). Four simultaneous component models f
 Nathaniel E. Helwig <helwig@umn.edu>
 }
 \note{
-Default use is 10 random strarts (\code{nstart=10}) with 500 maximum iterations of the ALS algorithm for each start (\code{maxit=500}) using a relative convergence tolerace of 10^-7 (\code{ctol=10^-7}).
+Default use is 10 random strarts (\code{nstart=10}) with 500 maximum iterations of the ALS algorithm for each start (\code{maxit=500}) using a convergence tolerance of 10^-4 (\code{ctol=10^-4}). The algorithm is determined to have converged once the change in R^2 is less than or equal to \code{ctol}.
 
 Output \code{cflag} gives convergence information: \code{cflag=0} if ALS algorithm converged normally, \code{cflag=1} if maximum iteration limit was reached before convergence, and \code{cflag=2} if ALS algorithm terminated abnormally due to problem with non-negativity constraints.
 }
@@ -112,7 +112,7 @@ for(k in 1:mydim[3]){
   Emat[[k]] <- matrix(rnorm(nk[k]*mydim[2]),nk[k],mydim[2])
 }
 rm(Dmat)
-Emat <- nrescale(Emat,0,sumsq(Xmat))   # SNR=1
+Emat <- nscale(Emat,0,sumsq(Xmat))   # SNR=1
 X <- mapply("+",Xmat,Emat)
 
 # fit SCA-P model (no rotation)
@@ -120,6 +120,28 @@ scamod <- sca(X,nfac=nf,nstart=1)
 scamod$Rsq
 
 # check solution
+crossprod(scamod$D[[1]] \%*\% diag(scamod$C[1,]^-1) ) / nk[1]
+crossprod(scamod$D[[5]] \%*\% diag(scamod$C[5,]^-1) ) / nk[5]
+Xhat <- fitted(scamod)
+sse <- sumsq(mapply("-",Xmat,Xhat))
+sse/(sum(nk)*mydim[2])
+
+# reorder and resign factors
+scamod$B[1:4,]
+scamod <- reorder(scamod, 2:1)
+scamod$B[1:4,]
+scamod <- resign(scamod, mode="B", newsign=c(1,-1))
+scamod$B[1:4,]
+Xhat <- fitted(scamod)
+sse <- sumsq(mapply("-",Xmat,Xhat))
+sse/(sum(nk)*mydim[2])
+
+# rescale factors
+colSums(scamod$B^2)
+colSums(scamod$C^2)
+scamod <- rescale(scamod, mode="C")
+colSums(scamod$B^2)
+colSums(scamod$C^2)
 Xhat <- fitted(scamod)
 sse <- sumsq(mapply("-",Xmat,Xhat))
 sse/(sum(nk)*mydim[2])
@@ -141,7 +163,7 @@ for(k in 1:mydim[3]){
   Xmat[[k]] <- tcrossprod(Fmat[[k]]\%*\%Gmat\%*\%diag(Cmat[k,]),Bmat)
   Emat[[k]] <- matrix(rnorm(nk[k]*mydim[2]),nk[k],mydim[2])
 }
-Emat <- nrescale(Emat,0,sumsq(Xmat))   # SNR=1
+Emat <- nscale(Emat,0,sumsq(Xmat))   # SNR=1
 X <- mapply("+",Xmat,Emat)
 
 # fit SCA-PF2 model
@@ -150,7 +172,28 @@ scamod$Rsq
 
 # check solution
 scamod$Phi
-diag(scamod$C[1,]^-1)\%*\%crossprod(scamod$D[[1]])\%*\%diag(scamod$C[1,]^-1)/nk[1]
+crossprod(scamod$D[[1]] \%*\% diag(scamod$C[1,]^-1) ) / nk[1]
+crossprod(scamod$D[[5]] \%*\% diag(scamod$C[5,]^-1) ) / nk[5]
+Xhat <- fitted(scamod)
+sse <- sumsq(mapply("-",Xmat,Xhat))
+sse/(sum(nk)*mydim[2])
+
+# reorder and resign factors
+scamod$B[1:4,]
+scamod <- reorder(scamod, 2:1)
+scamod$B[1:4,]
+scamod <- resign(scamod, mode="B", newsign=c(1,-1))
+scamod$B[1:4,]
+Xhat <- fitted(scamod)
+sse <- sumsq(mapply("-",Xmat,Xhat))
+sse/(sum(nk)*mydim[2])
+
+# rescale factors
+colSums(scamod$B^2)
+colSums(scamod$C^2)
+scamod <- rescale(scamod, mode="C")
+colSums(scamod$B^2)
+colSums(scamod$C^2)
 Xhat <- fitted(scamod)
 sse <- sumsq(mapply("-",Xmat,Xhat))
 sse/(sum(nk)*mydim[2])
@@ -172,7 +215,7 @@ for(k in 1:mydim[3]){
   Xmat[[k]] <- tcrossprod(Fmat[[k]]\%*\%Gmat\%*\%diag(Cmat[k,]),Bmat)
   Emat[[k]] <- matrix(rnorm(nk[k]*mydim[2]),nk[k],mydim[2])
 }
-Emat <- nrescale(Emat,0,sumsq(Xmat))   # SNR=1
+Emat <- nscale(Emat,0,sumsq(Xmat))   # SNR=1
 X <- mapply("+",Xmat,Emat)
 
 # fit SCA-IND model
@@ -181,7 +224,28 @@ scamod$Rsq
 
 # check solution
 scamod$Phi
-diag(scamod$C[1,]^-1)\%*\%crossprod(scamod$D[[1]])\%*\%diag(scamod$C[1,]^-1)/nk[1]
+crossprod(scamod$D[[1]] \%*\% diag(scamod$C[1,]^-1) ) / nk[1]
+crossprod(scamod$D[[5]] \%*\% diag(scamod$C[5,]^-1) ) / nk[5]
+Xhat <- fitted(scamod)
+sse <- sumsq(mapply("-",Xmat,Xhat))
+sse/(sum(nk)*mydim[2])
+
+# reorder and resign factors
+scamod$B[1:4,]
+scamod <- reorder(scamod, 2:1)
+scamod$B[1:4,]
+scamod <- resign(scamod, mode="B", newsign=c(1,-1))
+scamod$B[1:4,]
+Xhat <- fitted(scamod)
+sse <- sumsq(mapply("-",Xmat,Xhat))
+sse/(sum(nk)*mydim[2])
+
+# rescale factors
+colSums(scamod$B^2)
+colSums(scamod$C^2)
+scamod <- rescale(scamod, mode="C")
+colSums(scamod$B^2)
+colSums(scamod$C^2)
 Xhat <- fitted(scamod)
 sse <- sumsq(mapply("-",Xmat,Xhat))
 sse/(sum(nk)*mydim[2])
@@ -203,7 +267,7 @@ for(k in 1:mydim[3]){
   Xmat[[k]] <- tcrossprod(Fmat[[k]]\%*\%Gmat\%*\%diag(Cmat[k,]),Bmat)
   Emat[[k]] <- matrix(rnorm(nk[k]*mydim[2]),nk[k],mydim[2])
 }
-Emat <- nrescale(Emat,0,sumsq(Xmat))   # SNR=1
+Emat <- nscale(Emat,0,sumsq(Xmat))   # SNR=1
 X <- mapply("+",Xmat,Emat)
 
 # fit SCA-ECP model
@@ -212,7 +276,28 @@ scamod$Rsq
 
 # check solution
 scamod$Phi
-crossprod(scamod$D[[1]])/nk[1]
+crossprod(scamod$D[[1]] \%*\% diag(scamod$C[1,]^-1) ) / nk[1]
+crossprod(scamod$D[[5]] \%*\% diag(scamod$C[5,]^-1) ) / nk[5]
+Xhat <- fitted(scamod)
+sse <- sumsq(mapply("-",Xmat,Xhat))
+sse/(sum(nk)*mydim[2])
+
+# reorder and resign factors
+scamod$B[1:4,]
+scamod <- reorder(scamod, 2:1)
+scamod$B[1:4,]
+scamod <- resign(scamod, mode="B", newsign=c(-1,1))
+scamod$B[1:4,]
+Xhat <- fitted(scamod)
+sse <- sumsq(mapply("-",Xmat,Xhat))
+sse/(sum(nk)*mydim[2])
+
+# rescale factors
+colSums(scamod$B^2)
+colSums(scamod$C^2)
+scamod <- rescale(scamod, mode="B")
+colSums(scamod$B^2)
+colSums(scamod$C^2)
 Xhat <- fitted(scamod)
 sse <- sumsq(mapply("-",Xmat,Xhat))
 sse/(sum(nk)*mydim[2])
@@ -236,7 +321,7 @@ for(k in 1:mydim[3]){
   Xmat[[k]] <- tcrossprod(Fmat[[k]]\%*\%Gmat\%*\%diag(Cmat[k,]),Bmat)
   Emat[[k]] <- matrix(rnorm(nk[k]*mydim[2]),nk[k],mydim[2])
 }
-Emat <- nrescale(Emat,0,sumsq(Xmat))   # SNR=1
+Emat <- nscale(Emat,0,sumsq(Xmat))   # SNR=1
 X <- mapply("+",Xmat,Emat)
 
 # fit SCA-PF2 model (10 random starts -- sequential computation)

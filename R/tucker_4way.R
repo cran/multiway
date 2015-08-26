@@ -1,10 +1,10 @@
 tucker_4way <-
   function(data,nfac,xcx=sumsq(data),maxit=500,
-           ctol=10^-7,Afixed=NULL,Bfixed=NULL,Cfixed=NULL,
+           ctol=10^-4,Afixed=NULL,Bfixed=NULL,Cfixed=NULL,
            Dfixed=NULL,Bstart=NULL,Cstart=NULL,Dstart=NULL){
     # 4-way Tucker model
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: April 9, 2015
+    # last updated: August 26, 2015
     
     ### initialize reshaped data matrices
     xdims <- dim(data)
@@ -49,13 +49,14 @@ tucker_4way <-
       # Step 3: update mode C weights
       if(is.null(Cfixed)){ Cnew <- svd(Xc%*%kronecker(Dold,kronecker(Bnew,Anew)),nu=nfac[3],nv=0)$u }
       
-      # Step 4: update mode C weights
+      # Step 4: update mode D weights
       if(is.null(Dfixed)){ Dnew <- svd(Xd%*%kronecker(Cnew,kronecker(Bnew,Anew)),nu=nfac[4],nv=0)$u }
       
       # Step 5: update G and check for convergence
       Ga <- crossprod(Anew,Xa%*%kronecker(Dnew,kronecker(Cnew,Bnew)))
       ssenew <- xcx - sum(rowSums(Ga^2))
-      vtol <- (sseold-ssenew)/sseold
+      #vtol <- (sseold-ssenew)/sseold
+      vtol <- (sseold - ssenew) / xcx
       Aold <- Anew
       Bold <- Bnew
       Cold <- Cnew

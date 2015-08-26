@@ -1,12 +1,12 @@
 parafac2 <- 
   function(X,nfac,nstart=10,const=NULL,maxit=500,
-           Bfixed=NULL,Cfixed=NULL,Dfixed=NULL,
-           Bstart=NULL,Cstart=NULL,Dstart=NULL,
-           ctol=10^-7,parallel=FALSE,cl=NULL){
+           Gfixed=NULL,Bfixed=NULL,Cfixed=NULL,Dfixed=NULL,
+           Gstart=NULL,Bstart=NULL,Cstart=NULL,Dstart=NULL,
+           ctol=10^-4,parallel=FALSE,cl=NULL,output=c("best","all")){
     # 3-way or 4-way Parallel Factor Analysis2 (Parafac2)
     # via alternating least squares (ALS) with optional constraints
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: April 9, 2015
+    # last updated: June 19, 2015
     
     # check 'X' input
     if(is.array(X)){
@@ -65,7 +65,11 @@ parafac2 <-
       if(const[1]==2L){stop("you cannot apply nonnegativity on Mode A")}
     }
     
-    # check 'Bfixed' and 'Cfixed' inputs
+    # check 'Gfixed' and 'Bfixed' and 'Cfixed' inputs
+    if(!is.null(Gfixed)){
+      Gfixed <- as.matrix(Gfixed)
+      if(nrow(Gfixed)!=nfac | ncol(Gfixed)!=nfac){stop("Input 'Gfixed' must have 'nfac' rows and 'nfac' columns")}
+    }
     if(!is.null(Bfixed)){
       Bfixed <- as.matrix(Bfixed)
       if(nrow(Bfixed)!=xdim[2]){stop("Input 'Bfixed' must have the same number of rows as dim(X)[2]")}
@@ -77,7 +81,11 @@ parafac2 <-
       if(ncol(Cfixed)!=nfac){stop("Input 'Cfixed' must have 'nfac' columns")}
     }
     
-    # check 'Bstart' and 'Cstart' inputs
+    # check 'Gstart' and 'Bstart' and 'Cstart' inputs
+    if(!is.null(Gstart)){
+      Gstart <- as.matrix(Gstart)
+      if(nrow(Gstart)!=nfac | ncol(Gstart)!=nfac){stop("Input 'Gstart' must have 'nfac' rows and 'nfac' columns")}
+    }
     if(!is.null(Bstart)){
       Bstart <- as.matrix(Bstart)
       if(nrow(Bstart)!=xdim[2]){stop("Input 'Bstart' must have the same number of rows as dim(X)[2]")}
@@ -100,18 +108,16 @@ parafac2 <-
         nstartlist <- vector("list",nstart)
         nstartlist[1:nstart] <- nfac
         pfaclist <- parLapply(cl=cl,X=nstartlist,fun="parafac2_3way",data=X,xcx=xcx,
-                              const=const,maxit=maxit,ctol=ctol,Bfixed=Bfixed,Cfixed=Cfixed,
-                              Bstart=Bstart,Cstart=Cstart)
+                              const=const,maxit=maxit,ctol=ctol,Gfixed=Gfixed,Bfixed=Bfixed,
+                              Cfixed=Cfixed,Gstart=Gstart,Bstart=Bstart,Cstart=Cstart)
       } else {
         pfaclist <- vector("list",nstart)
         for(j in 1:nstart){
-          pfaclist[[j]] <- parafac2_3way(X,nfac,xcx,const,maxit,ctol,Bfixed,Cfixed,Bstart,Cstart)
+          pfaclist[[j]] <- parafac2_3way(data=X,nfac=nfac,xcx=xcx,const=const,maxit=maxit,
+                                         ctol=ctol,Gfixed=Gfixed,Bfixed=Bfixed,Cfixed=Cfixed,
+                                         Gstart=Gstart,Bstart=Bstart,Cstart=Cstart)
         }
-      }
-      widx <- which.max(sapply(pfaclist,function(x) x$Rsq))
-      pfac <- c(pfaclist[[widx]],list(const=const))
-      class(pfac) <- "parafac2"
-      return(pfac)
+      } # end if(parallel)
     } else if(lxdim==4L){
       # check 'Dfixed' and 'Dstart' inputs
       if(!is.null(Dfixed)){
@@ -128,18 +134,28 @@ parafac2 <-
         nstartlist <- vector("list",nstart)
         nstartlist[1:nstart] <- nfac
         pfaclist <- parLapply(cl=cl,X=nstartlist,fun="parafac2_4way",data=X,xcx=xcx,
-                              const=const,maxit=maxit,ctol=ctol,Bfixed=Bfixed,Cfixed=Cfixed,
-                              Dfixed=Dfixed,Bstart=Bstart,Cstart=Cstart,Dstart=Dstart)
+                              const=const,maxit=maxit,ctol=ctol,Gfixed=Gfixed,
+                              Bfixed=Bfixed,Cfixed=Cfixed,Dfixed=Dfixed,
+                              Gstart=Gstart,Bstart=Bstart,Cstart=Cstart,Dstart=Dstart)
       } else {
         pfaclist <- vector("list",nstart)
         for(j in 1:nstart){
-          pfaclist[[j]] <- parafac2_4way(X,nfac,xcx,const,maxit,ctol,Bfixed,Cfixed,Dfixed,Bstart,Cstart,Dstart)
+          pfaclist[[j]] <- parafac2_4way(data=X,nfac=nfac,xcx=xcx,const=const,maxit=maxit,ctol=ctol,
+                                         Gfixed=Gfixed,Bfixed=Bfixed,Cfixed=Cfixed,Dfixed=Dfixed,
+                                         Gstart=Gstart,Bstart=Bstart,Cstart=Cstart,Dstart=Dstart)
         }
-      }
+      } # end if(parallel)
+    } # end if(lxdim==3L) 
+    
+    # output results
+    if(output[1]=="best"){
       widx <- which.max(sapply(pfaclist,function(x) x$Rsq))
-      pfac <- c(pfaclist[[widx]],list(const=const))
+      pfac <- pfaclist[[widx]]
       class(pfac) <- "parafac2"
       return(pfac)
-    } 
+    } else {
+      pfaclist <- lapply(pfaclist, function(x) {class(x) <- "parafac2"; x})
+      return(pfaclist)
+    }
     
-  }
+  } # end parafac2.R

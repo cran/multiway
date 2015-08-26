@@ -22,9 +22,9 @@ Weight matrices are estimated using an alternating least squares algorithm with 
 }
 \usage{
 parafac2(X,nfac,nstart=10,const=NULL,maxit=500,
-         Bfixed=NULL,Cfixed=NULL,Dfixed=NULL,
-         Bstart=NULL,Cstart=NULL,Dstart=NULL,
-         ctol=10^-7,parallel=FALSE,cl=NULL)
+         Gfixed=NULL,Bfixed=NULL,Cfixed=NULL,Dfixed=NULL,
+         Gstart=NULL,Bstart=NULL,Cstart=NULL,Dstart=NULL,
+         ctol=10^-4,parallel=FALSE,cl=NULL,output=c("best","all"))
 }
 \arguments{
   \item{X}{
@@ -42,6 +42,10 @@ parafac2(X,nfac,nstart=10,const=NULL,maxit=500,
   \item{maxit}{
   Maximum number of iterations.
 }
+  \item{Gfixed}{
+  Fixed Mode A crossproducts (\code{crossprod(Gfixed)=Phi}). Only used to fit model with fixed Phi matrix.
+}
+  
   \item{Bfixed}{
   Fixed Mode B weights. Only used to fit model with fixed Mode B weights.
 }
@@ -50,6 +54,9 @@ parafac2(X,nfac,nstart=10,const=NULL,maxit=500,
 }
   \item{Dfixed}{
   Fixed Mode D weights. Only used to fit model with fixed Mode D weights.
+}
+  \item{Gstart}{
+  Starting Mode A crossproduct matrix for ALS algorithm (\code{crossprod(Gstart)=Phi}). Default uses random weights.
 }
   \item{Bstart}{
   Starting Mode B weights for ALS algorithm. Default uses random weights.
@@ -69,8 +76,12 @@ parafac2(X,nfac,nstart=10,const=NULL,maxit=500,
   \item{cl}{
   Cluster created by \code{\link{makeCluster}}. Only used when \code{parallel=TRUE}.
 }
+  \item{output}{
+  Output the best solution (default) or output all \code{nstart} solutions.
+}
 }
 \value{
+If \code{output="best"}, returns an object of class \code{"parafac2"} with the following elements:
 \item{A}{List with 2 elements (see Note).}
 \item{B}{Mode B weight matrix.}
 \item{C}{Mode C weight matrix.}
@@ -79,6 +90,8 @@ parafac2(X,nfac,nstart=10,const=NULL,maxit=500,
 \item{iter}{Number of iterations.}
 \item{cflag}{Convergence flag.}
 \item{const}{Same as input \code{const}.}
+
+Otherwise returns a list of length \code{nstart} where each element is an object of class \code{"parafac2"}.
 }
 \references{
 Bro, R., & De Jong, S. (1997). A fast non-negativity-constrained least squares algorithm. \emph{Journal of Chemometrics, 11}, 393-401.
@@ -95,7 +108,7 @@ Nathaniel E. Helwig <helwig@umn.edu>
 \note{
 Output: \code{A$H} is list of orthogonal matrices, and \code{A$G} is \code{R}-by-\code{R} matrix such that \code{crossprod(A$G) = Phi}. For 3-way case \code{A$H[[k]]\%*\%A$G} gives Mode A weights for \code{k}-th level of Mode C. For 4-way case \code{A$H[[l]]\%*\%A$G} gives Mode A weights for \code{l}-th level of Mode D. 
 
-Default use is 10 random strarts (\code{nstart=10}) with 500 maximum iterations of the ALS algorithm for each start (\code{maxit=500}) using a relative convergence tolerace of 10^-7 (\code{ctol=10^-7}).
+Default use is 10 random strarts (\code{nstart=10}) with 500 maximum iterations of the ALS algorithm for each start (\code{maxit=500}) using a convergence tolerance of 10^-4 (\code{ctol=10^-4}). The algorithm is determined to have converged once the change in R^2 is less than or equal to \code{ctol}.
 
 Input \code{const} should be a three or four element integer vector. Set \code{const[j]=0} for unconstrained update in j-th mode weight matrix, \code{const[j]=1} for orthogonal update in j-th mode weight matrix, or \code{const[j]=2} for non-negative update in j-th mode. Default is unconstrained update for all modes. Note: non-negativity in Mode A is not allowed.
 
@@ -126,7 +139,7 @@ for(k in 1:mydim[3]){
   Xmat[[k]] <- tcrossprod(Hmat[[k]]\%*\%Gmat\%*\%diag(Cmat[k,]),Bmat)
   Emat[[k]] <- matrix(rnorm(nk[k]*mydim[2]),nk[k],mydim[2])
 }
-Emat <- nrescale(Emat,0,sumsq(Xmat))   # SNR=1
+Emat <- nscale(Emat,0,sumsq(Xmat))   # SNR=1
 X <- mapply("+",Xmat,Emat)
 
 # fit Parafac2 model (unconstrained)
@@ -139,6 +152,26 @@ sse <- sumsq(mapply("-",Xmat,Xhat))
 sse/(sum(nk)*mydim[2])
 crossprod(pfac$A$H[[1]])
 crossprod(pfac$A$G)
+
+# reorder and resign factors
+pfac$B[1:4,]
+pfac <- reorder(pfac, 2:1)
+pfac$B[1:4,]
+pfac <- resign(pfac, mode="B")
+pfac$B[1:4,]
+Xhat <- fitted(pfac)
+sse <- sumsq(mapply("-",Xmat,Xhat))
+sse/(sum(nk)*mydim[2])
+
+# rescale factors
+colSums(pfac$B^2)
+colSums(pfac$C^2)
+pfac <- rescale(pfac, mode="C", absorb="B")
+colSums(pfac$B^2)
+colSums(pfac$C^2)
+Xhat <- fitted(pfac)
+sse <- sumsq(mapply("-",Xmat,Xhat))
+sse/(sum(nk)*mydim[2])
 
 
 ##########   4-way example   ##########
@@ -159,7 +192,7 @@ for(k in 1:mydim[4]){
                              krprod(Cmat,Bmat)),dim=c(nk[k],mydim[2],mydim[3]))
   Emat[[k]] <- array(rnorm(nk[k]*mydim[2]*mydim[3]),dim=c(nk[k],mydim[2],mydim[3]))
 }
-Emat <- nrescale(Emat,0,sumsq(Xmat))   # SNR=1
+Emat <- nscale(Emat,0,sumsq(Xmat))   # SNR=1
 X <- mapply("+",Xmat,Emat)
 
 # fit Parafac2 model (unconstrained)
@@ -192,7 +225,7 @@ for(k in 1:mydim[3]){
   Xmat[[k]] <- tcrossprod(Hmat[[k]]\%*\%Gmat\%*\%diag(Cmat[k,]),Bmat)
   Emat[[k]] <- matrix(rnorm(nk[k]*mydim[2]),nk[k],mydim[2])
 }
-Emat <- nrescale(Emat,0,sumsq(Xmat))   # SNR=1
+Emat <- nscale(Emat,0,sumsq(Xmat))   # SNR=1
 X <- mapply("+",Xmat,Emat)
 
 # fit Parafac2 model (10 random starts -- sequential computation)

@@ -1,10 +1,10 @@
 parafac_3way <-
   function(data,nfac,xcx=sumsq(data),const=rep(0L,3),
-           maxit=500,ctol=10^-7,Bfixed=NULL,Cfixed=NULL,
+           maxit=500,ctol=10^-4,Bfixed=NULL,Cfixed=NULL,
            Bstart=NULL,Cstart=NULL){
     # 3-way Parallel Factor Analysis (Parafac)
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: April 9, 2015
+    # last updated: August 26, 2015
     
     ### initialize Khatri-Rao product matrices
     xdims <- dim(data)
@@ -58,7 +58,8 @@ parafac_3way <-
       # Step 1: update mode A weights
       for(u in 1:nfac){CkrB[,u] <- kronecker(Cold[,u],Bold[,u])}
       if(const[1]==0L){
-        Anew <- Xa%*%CkrB%*%smpower(crossprod(CkrB),-1)
+        #Anew <- Xa%*%CkrB%*%smpower(crossprod(CkrB),-1)
+        Anew <- Xa%*%CkrB%*%smpower(crossprod(Cold)*crossprod(Bold),-1)
       } else if(const[1]==1L) {
         Zmat <- Xa%*%CkrB
         Anew <- Zmat%*%smpower(crossprod(Zmat),-0.5)
@@ -76,14 +77,19 @@ parafac_3way <-
       if(is.null(Bfixed)){
         for(u in 1:nfac){CkrA[,u] <- kronecker(Cold[,u],Anew[,u])}
         if(const[2]==0L){
-          Bnew <- Xb%*%CkrA%*%smpower(crossprod(CkrA),-1)
+          #Bnew <- Xb%*%CkrA%*%smpower(crossprod(CkrA),-1)
+          Bnew <- Xb%*%CkrA%*%smpower(crossprod(Cold)*crossprod(Anew),-1)
         } else if(const[2]==1L) {
           Zmat <- Xb%*%CkrA
           Bnew <- Zmat%*%smpower(crossprod(Zmat),-0.5)
         } else if(const[2]==2L) {
           cpmat <- crossprod(CkrA)
           for(ii in 1:xdims[2]){Bnew[ii,] <- fnnls(cpmat,crossprod(CkrA,Xb[ii,]))}
-          if(any(colSums(Bnew)==0)){Bnew <- Bold;  cflag <- 2}
+          if(any(colSums(Bnew)==0)){
+            Bnew <- Bold
+            vtol <- 0
+            cflag <- 2
+          }
         }
       }
       
@@ -91,21 +97,27 @@ parafac_3way <-
       if(is.null(Cfixed)){
         for(u in 1:nfac){BkrA[,u] <- kronecker(Bnew[,u],Anew[,u])}
         if(const[3]==0L){
-          Cnew <- Xc%*%BkrA%*%smpower(crossprod(BkrA),-1)
+          #Cnew <- Xc%*%BkrA%*%smpower(crossprod(BkrA),-1)
+          Cnew <- Xc%*%BkrA%*%smpower(crossprod(Bnew)*crossprod(Anew),-1)
         } else if(const[3]==1L) {
           Zmat <- Xc%*%BkrA
           Cnew <- Zmat%*%smpower(crossprod(Zmat),-0.5)
         } else if(const[3]==2L) {
           cpmat <- crossprod(BkrA)
           for(ii in 1:xdims[3]){Cnew[ii,] <- fnnls(cpmat,crossprod(BkrA,Xc[ii,]))}
-          if(any(colSums(Cnew)==0)){Cnew <- Cold;  cflag <- 2}
+          if(any(colSums(Cnew)==0)){
+            Cnew <- Cold
+            vtol <- 0
+            cflag <- 2
+          }
         }
       }
       
       # Step 4: check for convergence
       for(u in 1:nfac){CkrB[,u] <- kronecker(Cnew[,u],Bnew[,u])}
       ssenew <- sum((Xa-tcrossprod(Anew,CkrB))^2)
-      vtol <- (sseold-ssenew)/sseold
+      #vtol <- (sseold-ssenew)/sseold
+      vtol <- (sseold - ssenew) / xcx
       Aold <- Anew
       Bold <- Bnew
       Cold <- Cnew
@@ -114,42 +126,22 @@ parafac_3way <-
       
     } # end while(vtol>ctol && iter<maxit)
     
-    ### put the scale in Mode A      
-    bdg <- colMeans(Bnew^2)
-    Bnew <- Bnew%*%(diag(nfac)*(bdg^-0.5))
-    cdg <- colMeans(Cnew^2)
-    Cnew <- Cnew%*%(diag(nfac)*(cdg^-0.5))
-    Anew <- Anew%*%(diag(nfac)*((bdg*cdg)^0.5))
-    
-    ### order the solution
-    if(any(c(!is.null(Bfixed),!is.null(Cfixed)))){
-      # sign and order according to fixed weights
-      if(!is.null(Bfixed)){
-        bdgfx <- colMeans(Bfixed^2)
-        bdg <- colMeans(Bnew^2)
-        Bnew <- Bnew%*%(diag(nfac)*((bdgfx/bdg)^0.5))
-        Anew <- Anew%*%(diag(nfac)*((bdg/bdgfx)^0.5))
-        bsgfx <- sign(colSums(Bfixed^3))
-        bsg <- sign(colSums(Bnew^3))
-        Bnew <- Bnew%*%(diag(nfac)*(bsg*bsgfx))
-        Anew <- Anew%*%(diag(nfac)*(bsg*bsgfx))
-      }
-      if(!is.null(Cfixed)){
-        cdgfx <- colMeans(Cfixed^2)
-        cdg <- colMeans(Cnew^2)
-        Cnew <- Cnew%*%(diag(nfac)*((cdgfx/cdg)^0.5))
-        Anew <- Anew%*%(diag(nfac)*((cdg/cdgfx)^0.5))
-        csgfx <- sign(colSums(Cfixed^3))
-        csg <- sign(colSums(Cnew^3))
-        Cnew <- Cnew%*%(diag(nfac)*(csg*csgfx))
-        Anew <- Anew%*%(diag(nfac)*(csg*csgfx))
-      } 
-    } else {
-      # put sign and scale in mode A
-      fordr <- order(colSums(Anew^2),decreasing=TRUE)
+    ### scale and order solution
+    if(is.null(Bfixed) & is.null(Cfixed)){
+      
+      # put the scale in Mode C
+      adg <- colMeans(Anew^2)
+      Anew <- Anew%*%(diag(nfac)*(adg^-0.5))
+      bdg <- colMeans(Bnew^2)
+      Bnew <- Bnew%*%(diag(nfac)*(bdg^-0.5))
+      Cnew <- Cnew%*%(diag(nfac)*((adg*bdg)^0.5))
+      
+      # order according to sum-of-squares
+      fordr <- order(colSums(Cnew^2),decreasing=TRUE)
       Anew <- as.matrix(Anew[,fordr])
       Bnew <- as.matrix(Bnew[,fordr])
       Cnew <- as.matrix(Cnew[,fordr])
+      
     }
     
     ### collect results
@@ -157,7 +149,7 @@ parafac_3way <-
     if(is.na(cflag)){
       if(vtol<=ctol){cflag <- 0} else {cflag <- 1}
     }
-    pfac <- list(A=Anew,B=Bnew,C=Cnew,Rsq=Rsq,iter=iter,cflag=cflag)
+    pfac <- list(A=Anew,B=Bnew,C=Cnew,Rsq=Rsq,iter=iter,cflag=cflag,const=const)
     return(pfac)
     
   }

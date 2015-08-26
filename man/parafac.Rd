@@ -22,7 +22,8 @@ Weight matrices are estimated using an alternating least squares algorithm with 
 parafac(X,nfac,nstart=10,const=NULL,maxit=500,
         Bfixed=NULL,Cfixed=NULL,Dfixed=NULL,
         Bstart=NULL,Cstart=NULL,Dstart=NULL,
-        ctol=10^-7,parallel=FALSE,cl=NULL)
+        ctol=10^-4,parallel=FALSE,cl=NULL,
+        output=c("best","all"))
 }
 \arguments{
   \item{X}{
@@ -59,7 +60,7 @@ parafac(X,nfac,nstart=10,const=NULL,maxit=500,
   Starting Mode D weights for ALS algorithm. Default uses random weights.
 }
   \item{ctol}{
-  Convergence tolerance.
+  Convergence tolerance (R^2 change).
 }
   \item{parallel}{
   Logical indicating if \code{\link{parLapply}} should be used. See Examples.
@@ -67,8 +68,12 @@ parafac(X,nfac,nstart=10,const=NULL,maxit=500,
   \item{cl}{
   Cluster created by \code{\link{makeCluster}}. Only used when \code{parallel=TRUE}.
 }
+  \item{output}{
+  Output the best solution (default) or output all \code{nstart} solutions.
+}
 }
 \value{
+If \code{output="best"}, returns an object of class \code{"parafac"} with the following elements:
 \item{A}{Mode A weight matrix.}
 \item{B}{Mode B weight matrix.}
 \item{C}{Mode C weight matrix.}
@@ -76,7 +81,9 @@ parafac(X,nfac,nstart=10,const=NULL,maxit=500,
 \item{Rsq}{R-squared value.}
 \item{iter}{Number of iterations.}
 \item{cflag}{Convergence flag.}
-\item{const}{Same as input.}
+\item{const}{Same as input \code{const}.}
+
+Otherwise returns a list of length \code{nstart} where each element is an object of class \code{"parafac"}.
 }
 \references{
 Bro, R., & De Jong, S. (1997). A fast non-negativity-constrained least squares algorithm. \emph{Journal of Chemometrics, 11}, 393-401.
@@ -89,7 +96,7 @@ Harshman, R. A., & Lundy, M. E. (1994). PARAFAC: Parallel factor analysis. \emph
 Nathaniel E. Helwig <helwig@umn.edu>
 }
 \note{
-Default use is 10 random strarts (\code{nstart=10}) with 500 maximum iterations of the ALS algorithm for each start (\code{maxit=500}) using a relative convergence tolerace of 10^-7 (\code{ctol=10^-7}).
+Default use is 10 random strarts (\code{nstart=10}) with 500 maximum iterations of the ALS algorithm for each start (\code{maxit=500}) using a convergence tolerance of 10^-4 (\code{ctol=10^-4}). The algorithm is determined to have converged once the change in R^2 is less than or equal to \code{ctol}.
 
 Input \code{const} should be a three or four element integer vector. Set \code{const[j]=0} for unconstrained update in j-th mode weight matrix, \code{const[j]=1} for orthogonal update in j-th mode weight matrix, or \code{const[j]=2} for non-negative update in j-th mode. Default is unconstrained update for all modes.
 
@@ -115,7 +122,7 @@ Bmat <- matrix(runif(mydim[2]*nf),mydim[2],nf)
 Cmat <- matrix(runif(mydim[3]*nf),mydim[3],nf)
 Xmat <- array(tcrossprod(Amat,krprod(Cmat,Bmat)),dim=mydim)
 Emat <- array(rnorm(prod(mydim)),dim=mydim)
-Emat <- nrescale(Emat,0,sumsq(Xmat))   # SNR=1
+Emat <- nscale(Emat,0,sumsq(Xmat))   # SNR=1
 X <- Xmat + Emat
 
 # fit Parafac model (unconstrained)
@@ -123,6 +130,24 @@ pfac <- parafac(X,nfac=nf,nstart=1)
 pfac$Rsq
 
 # check solution
+Xhat <- fitted(pfac)
+sum((Xmat-Xhat)^2)/prod(mydim)
+
+# reorder and resign factors
+pfac$B[1:4,]
+pfac <- reorder(pfac, c(3,1,2))
+pfac$B[1:4,]
+pfac <- resign(pfac, mode="B")
+pfac$B[1:4,]
+Xhat <- fitted(pfac)
+sum((Xmat-Xhat)^2)/prod(mydim)
+
+# rescale factors
+colSums(pfac$B^2)
+colSums(pfac$C^2)
+pfac <- rescale(pfac, mode="C", absorb="B")
+colSums(pfac$B^2)
+colSums(pfac$C^2)
 Xhat <- fitted(pfac)
 sum((Xmat-Xhat)^2)/prod(mydim)
 
@@ -139,7 +164,7 @@ Cmat <- matrix(runif(mydim[3]*nf),mydim[3],nf)
 Dmat <- matrix(runif(mydim[4]*nf),mydim[4],nf)
 Xmat <- array(tcrossprod(Amat,krprod(Dmat,krprod(Cmat,Bmat))),dim=mydim)
 Emat <- array(rnorm(prod(mydim)),dim=mydim)
-Emat <- nrescale(Emat,0,sumsq(Xmat))   # SNR=1
+Emat <- nscale(Emat,0,sumsq(Xmat))   # SNR=1
 X <- Xmat + Emat
 
 # fit Parafac model (unconstrained A, orthogonal B, non-negative C, unconstrained D)
@@ -166,7 +191,7 @@ Bmat <- matrix(runif(mydim[2]*nf),mydim[2],nf)
 Cmat <- matrix(runif(mydim[3]*nf),mydim[3],nf)
 Xmat <- array(tcrossprod(Amat,krprod(Cmat,Bmat)),dim=mydim)
 Emat <- array(rnorm(prod(mydim)),dim=mydim)
-Emat <- nrescale(Emat,0,sumsq(Xmat))   # SNR=1
+Emat <- nscale(Emat,0,sumsq(Xmat))   # SNR=1
 X <- Xmat + Emat
 
 # fit Parafac model (10 random starts -- sequential computation)

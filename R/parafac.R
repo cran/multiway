@@ -2,11 +2,12 @@ parafac <-
   function(X,nfac,nstart=10,const=NULL,maxit=500,
            Bfixed=NULL,Cfixed=NULL,Dfixed=NULL,
            Bstart=NULL,Cstart=NULL,Dstart=NULL,
-           ctol=10^-7,parallel=FALSE,cl=NULL){
+           ctol=10^-4,parallel=FALSE,cl=NULL,
+           output=c("best","all")){
     # 3-way or 4-way Parallel Factor Analysis (Parafac)
     # via alternating least squares (ALS) with optional constraints
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: April 9, 2015
+    # last updated: June 19, 2015
     
     # check 'X' input
     xdim <- dim(X)
@@ -76,13 +77,10 @@ parafac <-
       } else {
         pfaclist <- vector("list",nstart)
         for(j in 1:nstart){
-          pfaclist[[j]] <- parafac_3way(X,nfac,xcx,const,maxit,ctol,Bfixed,Cfixed,Bstart,Cstart)
+          pfaclist[[j]] <- parafac_3way(data=X,nfac=nfac,xcx=xcx,const=const,maxit=maxit,ctol=ctol,
+                                        Bfixed=Bfixed,Cfixed=Cfixed,Bstart=Bstart,Cstart=Cstart)
         }
-      }
-      widx <- which.max(sapply(pfaclist,function(x) x$Rsq))
-      pfac <- c(pfaclist[[widx]],list(const=const))
-      class(pfac) <- "parafac"
-      return(pfac)
+      } # end if(parallel)
     } else if(lxdim==4L){
       # check 'Dfixed' and 'Dstart' inputs
       if(!is.null(Dfixed)){
@@ -104,13 +102,22 @@ parafac <-
       } else {
         pfaclist <- vector("list",nstart)
         for(j in 1:nstart){
-          pfaclist[[j]] <- parafac_4way(X,nfac,xcx,const,maxit,ctol,Bfixed,Cfixed,Dfixed,Bstart,Cstart,Dstart)
+          pfaclist[[j]] <- parafac_4way(data=X,nfac=nfac,xcx=xcx,const=const,maxit=maxit,
+                                        ctol=ctol,Bfixed=Bfixed,Cfixed=Cfixed,Dfixed=Dfixed,
+                                        Bstart=Bstart,Cstart=Cstart,Dstart=Dstart)
         }
-      }
+      } # end if(parallel)
+    } # end if(lxdim==3L)
+    
+    # output results
+    if(output[1]=="best"){
       widx <- which.max(sapply(pfaclist,function(x) x$Rsq))
-      pfac <- c(pfaclist[[widx]],list(const=const))
+      pfac <- pfaclist[[widx]]
       class(pfac) <- "parafac"
       return(pfac)
-    } 
+    } else {
+      pfaclist <- lapply(pfaclist, function(x) {class(x) <- "parafac"; x})
+      return(pfaclist)
+    }
     
-  }
+  } # end parafac.R
