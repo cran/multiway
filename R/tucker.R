@@ -1,13 +1,13 @@
 tucker <- 
-  function(X,nfac,nstart=10,maxit=500,Afixed=NULL,
+  function(X,nfac,nstart=10,Afixed=NULL,
            Bfixed=NULL,Cfixed=NULL,Dfixed=NULL,
            Bstart=NULL,Cstart=NULL,Dstart=NULL,
-           ctol=10^-4,parallel=FALSE,cl=NULL,
-           output=c("best","all")){
+           maxit=500,ctol=10^-4,parallel=FALSE,
+           cl=NULL,output=c("best","all")){
     # 3-way or 4-way Tucker model
-    # via alternating least squares (ALS)
+    # via alternating least squares (ALS) with optional constraints
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: June 19, 2015
+    # last updated: February 4, 2016
     
     # check 'X' input
     xdim <- dim(X)
@@ -114,7 +114,10 @@ tucker <-
       class(tuck) <- "tucker"
       return(tuck)
     } else {
-      tucklist <- lapply(tucklist, function(x) {class(x) <- "tucker"; x})
+      tucklist <- lapply(tucklist, function(tuck) {
+        class(tuck) <- "tucker"
+        tuck
+        })
       return(tucklist)
     }
     

@@ -20,11 +20,11 @@ Weight matrices are estimated using an alternating least squares algorithm.
 
 }
 \usage{
-tucker(X,nfac,nstart=10,maxit=500,Afixed=NULL,
+tucker(X,nfac,nstart=10,Afixed=NULL,
        Bfixed=NULL,Cfixed=NULL,Dfixed=NULL,
        Bstart=NULL,Cstart=NULL,Dstart=NULL,
-       ctol=10^-4,parallel=FALSE,cl=NULL,
-       output=c("best","all"))
+       maxit=500,ctol=10^-4,parallel=FALSE,
+       cl=NULL,output=c("best","all"))
 }
 \arguments{
   \item{X}{
@@ -35,9 +35,6 @@ tucker(X,nfac,nstart=10,maxit=500,Afixed=NULL,
 }
   \item{nstart}{
   Number of random starts.
-}
-  \item{maxit}{
-  Maximum number of iterations.
 }
   \item{Afixed}{
   Fixed Mode A weights. Only used to fit model with fixed weights in Mode A.
@@ -60,6 +57,9 @@ tucker(X,nfac,nstart=10,maxit=500,Afixed=NULL,
   \item{Dstart}{
   Starting Mode D weights for ALS algorithm. Default uses random weights.
 }
+  \item{maxit}{
+  Maximum number of iterations.
+}
   \item{ctol}{
   Convergence tolerance.
 }
@@ -81,6 +81,8 @@ If \code{output="best"}, returns an object of class \code{"tucker"} with the fol
 \item{D}{Mode D weight matrix.}
 \item{G}{Core array.}
 \item{Rsq}{R-squared value.}
+\item{GCV}{Generalized Cross-Validation.}
+\item{edf}{Effective degrees of freedom.}
 \item{iter}{Number of iterations.}
 \item{cflag}{Convergence flag.}
 

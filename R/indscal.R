@@ -6,7 +6,7 @@ indscal <-
     # Individual Differences Scaling (INDSCAL)
     # via alternating least squares (ALS) with optional constraints
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: June 19, 2015
+    # last updated: October 10, 2015
     
     # check 'X' input
     if(is.list(X)){
@@ -78,6 +78,7 @@ indscal <-
       bsg <- sign(colSums(pfac$B^3))
       pfac$B <- pfac$B%*%(diag(nfac)*(bsg))
       pfac <- c(pfac[2:6],list(const=const,strain=(1-pfac$Rsq)*xcx))
+      pfac$GCV <- NULL
       class(pfac) <- "indscal"
       return(pfac)
     } else {
@@ -89,6 +90,7 @@ indscal <-
         bsg <- sign(colSums(x$B^3))
         x$B <- x$B%*%(diag(nfac)*(bsg))
         x <- c(x[2:6],list(const=const,strain=(1-x$Rsq)*xcx))
+        x$GCV <- NULL
         class(x) <- "indscal"
         x
       })

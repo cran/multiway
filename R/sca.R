@@ -6,7 +6,7 @@ sca <-
     # Simultaneous Component Analysis
     # via alternating least squares (ALS) or closed-form solution
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: August 19, 2015
+    # last updated: February 16, 2016
     
     # check 'X' input
     if(is.array(X)){
@@ -87,6 +87,14 @@ sca <-
       iter <- 1
       cflag <- 0
       Phimat <- NULL
+      ntotal <- nrow(matdata)
+      Adf <- ntotal - xdim[3]*(nfac+1)/2
+      Gdf <- xdim[3]*(nfac+1)/2
+      Bdf <- xdim[2]-1L
+      Cdf <- 0
+      edf <- nfac * c(Adf+Gdf,Bdf,Cdf)
+      pxdim <- ntotal * xdim[2]
+      GCV <- (sse/pxdim) / (1 - sum(edf)/pxdim)^2
     } else if(type[1]=="sca-pf2"){
       if(parallel){
         nstartlist <- vector("list",nstart)
@@ -114,6 +122,8 @@ sca <-
       iter <- scamod$iter
       cflag <- scamod$cflag
       Phimat <- crossprod(scamod$A$G%*%(diag(nfac)/gsqrt))
+      GCV <- scamod$GCV
+      edf <- scamod$edf
     } else if(type[1]=="sca-ind"){
       if(parallel){
         nstartlist <- vector("list",nstart)
@@ -141,6 +151,8 @@ sca <-
       iter <- scamod$iter
       cflag <- scamod$cflag
       Phimat <- diag(nfac)
+      GCV <- scamod$GCV
+      edf <- scamod$edf
     } else if(type[1]=="sca-ecp"){
       nks <- rep(0,xdim[3])
       for(kk in 1:xdim[3]){nks[kk] <- sqrt(dim(X[[kk]])[1])}
@@ -182,10 +194,19 @@ sca <-
       iter <- scamod$iter
       cflag <- scamod$cflag
       Phimat <- crossprod(scamod$A$G)
+      ntotal <- sum(sapply(X,nrow))
+      Adf <- ntotal - xdim[3]*(nfac+1)/2
+      Gdf <- 0
+      Bdf <- xdim[2]
+      Cdf <- 0
+      edf <- nfac * c(Adf+Gdf,Bdf,Cdf)
+      pxdim <- ntotal * xdim[2]
+      ssenew <- (1-scamod$Rsq)*xcx
+      GCV <- (ssenew/pxdim) / (1 - sum(edf)/pxdim)^2
     }
-    
+    names(edf) <- c("A","B","C")
     scafit <- list(D=Dmats,B=Bmat,C=Cmat,Phi=Phimat,
-                   Rsq=Rsq,iter=iter,cflag=cflag,
+                   Rsq=Rsq,GCV=GCV,edf=edf,iter=iter,cflag=cflag,
                    type=type,rotation=rotation)
     class(scafit) <- "sca"
     return(scafit)

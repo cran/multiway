@@ -4,7 +4,7 @@ tucker_4way <-
            Dfixed=NULL,Bstart=NULL,Cstart=NULL,Dstart=NULL){
     # 4-way Tucker model
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: August 26, 2015
+    # last updated: October 14, 2015
     
     ### initialize reshaped data matrices
     xdims <- dim(data)
@@ -66,12 +66,23 @@ tucker_4way <-
       
     }  # while(vtol>ctol && iter<maxit)
     
+    ### GCV criterion
+    Adf <- xdims[1]*nfac[1] - nfac[1]*(nfac[1]+1)/2
+    Bdf <- xdims[2]*nfac[2] - nfac[2]*(nfac[2]+1)/2
+    Cdf <- xdims[3]*nfac[3] - nfac[3]*(nfac[3]+1)/2
+    Ddf <- xdims[4]*nfac[4] - nfac[4]*(nfac[4]+1)/2
+    edf <- c(Adf,Bdf,Cdf,Ddf,prod(nfac))
+    pxdim <- prod(xdims)
+    GCV <- (ssenew/pxdim) / (1 - sum(edf)/pxdim)^2
+    
     ### collect results
     Rsq <- 1 - ssenew/xcx
     if(is.na(cflag)){
       if(vtol<=ctol){cflag <- 0} else {cflag <- 1}
     }
-    tuck <- list(A=Anew,B=Bnew,C=Cnew,D=Dnew,G=array(Ga,dim=nfac),Rsq=Rsq,iter=iter,cflag=cflag)
+    names(edf) <- c("A","B","C","D","G")
+    tuck <- list(A=Anew,B=Bnew,C=Cnew,D=Dnew,G=array(Ga,dim=nfac),
+                 Rsq=Rsq,GCV=GCV,edf=edf,iter=iter,cflag=cflag)
     return(tuck)
     
   }

@@ -5,7 +5,7 @@
 Scale n-th Dimension of Array
 }
 \description{
- Slab-scale within each level of the specified mode. Can input 2-way, 3-way, and 4-way arrays, or input a list containing array elements.
+ Slab-scale within each level of the specified mode. Can input 2-way, 3-way, and 4-way arrays, or input a list containing array elements (see Note).
  
  With \code{X} a matrix (I-by-J) there are two options:
  \tabular{rcl}{
@@ -51,7 +51,7 @@ nrescale(X,mode=1,ssnew=1)
 Nathaniel E. Helwig <helwig@umn.edu>
 }
 \note{
-	When entering a list with array elements, each element must (a) be an array (2-way, 3-way, or 4-way), and (b) have the same dimension (i.e, array size).
+	When entering a list with array elements, each element must be a 2-way or 3-way array. The list elements are treated as the 3rd mode (for list of 2-way arrays) or the 4th mode (for list of 3-way arrays) in the formulas provided in the Description.
 }
 
 \examples{
@@ -94,9 +94,8 @@ rowSums(aperm(Xc,perm=c(4,1,2,3))^2)
 
 ##########   EXAMPLE 5   ##########
 X <- replicate(5,array(rnorm(20000),dim=c(100,20,10)),simplify=FALSE)
-Xc <- nscale(X,ssnew=200)   # mean square of 1
-rowSums(Xc[[1]]^2)
-rowMeans(Xc[[1]]^2)
+Xc <- nscale(X,ssnew=(20*10*5))   # mean square of 1
+rowSums(sapply(Xc, function(x) rowSums(x^2))) / (20*10*5)
 
 }
 

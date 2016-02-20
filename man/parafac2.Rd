@@ -21,10 +21,12 @@ subject to \code{crossprod(A[[l]]) = Phi} \cr
 Weight matrices are estimated using an alternating least squares algorithm with optional constraints.
 }
 \usage{
-parafac2(X,nfac,nstart=10,const=NULL,maxit=500,
+parafac2(X,nfac,nstart=10,const=NULL,
          Gfixed=NULL,Bfixed=NULL,Cfixed=NULL,Dfixed=NULL,
          Gstart=NULL,Bstart=NULL,Cstart=NULL,Dstart=NULL,
-         ctol=10^-4,parallel=FALSE,cl=NULL,output=c("best","all"))
+         Gstruc=NULL,Bstruc=NULL,Cstruc=NULL,Dstruc=NULL,
+         maxit=500,ctol=10^-4,parallel=FALSE,
+         cl=NULL,output=c("best","all"))
 }
 \arguments{
   \item{X}{
@@ -39,9 +41,6 @@ parafac2(X,nfac,nstart=10,const=NULL,maxit=500,
   \item{const}{
   Constraints for each mode. See Examples.
 } 
-  \item{maxit}{
-  Maximum number of iterations.
-}
   \item{Gfixed}{
   Fixed Mode A crossproducts (\code{crossprod(Gfixed)=Phi}). Only used to fit model with fixed Phi matrix.
 }
@@ -67,6 +66,21 @@ parafac2(X,nfac,nstart=10,const=NULL,maxit=500,
   \item{Dstart}{
   Starting Mode D weights for ALS algorithm. Default uses random weights.
 }
+  \item{Gstruc}{
+  Structure constraints for Mode A crossproduct matrix (\code{crossprod(Gstruc) = Phi structure}). Default uses unstructured crossproducts.
+}
+  \item{Bstruc}{
+  Structure constraints for Mode B weights. Default uses unstructured weights.
+}
+  \item{Cstruc}{
+  Structure constraints for Mode C weights. Default uses unstructured weights.
+}
+  \item{Dstruc}{
+  Structure constraints for Mode D weights. Default uses unstructured weights.
+}
+  \item{maxit}{
+  Maximum number of iterations.
+}
   \item{ctol}{
   Convergence tolerance.
 }
@@ -87,6 +101,8 @@ If \code{output="best"}, returns an object of class \code{"parafac2"} with the f
 \item{C}{Mode C weight matrix.}
 \item{D}{Mode D weight matrix.}
 \item{Rsq}{R-squared value.}
+\item{GCV}{Generalized Cross-Validation.}
+\item{edf}{Effective degrees of freedom.}
 \item{iter}{Number of iterations.}
 \item{cflag}{Convergence flag.}
 \item{const}{Same as input \code{const}.}

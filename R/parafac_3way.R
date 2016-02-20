@@ -1,10 +1,10 @@
 parafac_3way <-
   function(data,nfac,xcx=sumsq(data),const=rep(0L,3),
            maxit=500,ctol=10^-4,Bfixed=NULL,Cfixed=NULL,
-           Bstart=NULL,Cstart=NULL){
+           Bstart=NULL,Cstart=NULL,Bstruc=NULL,Cstruc=NULL){
     # 3-way Parallel Factor Analysis (Parafac)
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: August 26, 2015
+    # last updated: January 27, 2016
     
     ### initialize Khatri-Rao product matrices
     xdims <- dim(data)
@@ -36,6 +36,7 @@ parafac_3way <-
       } else if(const[2]==2L){
         Bold <- Bnew <- matrix(runif(xdims[2]*nfac),xdims[2],nfac)
       }
+      if(!is.null(Bstruc)) Bold <- Bnew <- Bold * Bstruc
     } else {Bold <- Bnew <- Bfixed}
     if(is.null(Cfixed)){
       if(!is.null(Cstart)){
@@ -47,6 +48,7 @@ parafac_3way <-
       } else if(const[3]==2L){
         Cold <- Cnew <- matrix(runif(xdims[3]*nfac),xdims[3],nfac)
       }
+      if(!is.null(Cstruc)) Cold <- Cnew <- Cold * Cstruc
     } else {Cold <- Cnew <- Cfixed}
     
     ### iterative update of matrices
@@ -76,42 +78,56 @@ parafac_3way <-
       # Step 2: update mode B weights
       if(is.null(Bfixed)){
         for(u in 1:nfac){CkrA[,u] <- kronecker(Cold[,u],Anew[,u])}
-        if(const[2]==0L){
-          #Bnew <- Xb%*%CkrA%*%smpower(crossprod(CkrA),-1)
-          Bnew <- Xb%*%CkrA%*%smpower(crossprod(Cold)*crossprod(Anew),-1)
-        } else if(const[2]==1L) {
-          Zmat <- Xb%*%CkrA
-          Bnew <- Zmat%*%smpower(crossprod(Zmat),-0.5)
-        } else if(const[2]==2L) {
-          cpmat <- crossprod(CkrA)
-          for(ii in 1:xdims[2]){Bnew[ii,] <- fnnls(cpmat,crossprod(CkrA,Xb[ii,]))}
-          if(any(colSums(Bnew)==0)){
-            Bnew <- Bold
-            vtol <- 0
-            cflag <- 2
+        if(is.null(Bstruc)){
+          if(const[2]==0L){
+            #Bnew <- Xb%*%CkrA%*%smpower(crossprod(CkrA),-1)
+            Bnew <- Xb%*%CkrA%*%smpower(crossprod(Cold)*crossprod(Anew),-1)
+          } else if(const[2]==1L) {
+            Zmat <- Xb%*%CkrA
+            Bnew <- Zmat%*%smpower(crossprod(Zmat),-0.5)
+          } else if(const[2]==2L) {
+            cpmat <- crossprod(CkrA)
+            for(ii in 1:xdims[2]){Bnew[ii,] <- fnnls(cpmat,crossprod(CkrA,Xb[ii,]))}
+            if(any(colSums(Bnew)==0)){
+              Bnew <- Bold
+              vtol <- 0
+              cflag <- 2
+            }
+          } # end if(const[2]==0L)
+        } else {
+          for(u in 1:nfac){
+            Zhat = Xb - tcrossprod(Bnew[,-u],CkrA[,-u])
+            Bnew[,u] = ( (Zhat %*% CkrA[,u]) / sum(CkrA[,u]^2) ) * Bstruc[,u]
           }
-        }
-      }
+        } # end if(is.null(Bstruc))
+      } # end if(is.null(Bfixed))
       
       # Step 3: update mode C weights
       if(is.null(Cfixed)){
         for(u in 1:nfac){BkrA[,u] <- kronecker(Bnew[,u],Anew[,u])}
-        if(const[3]==0L){
-          #Cnew <- Xc%*%BkrA%*%smpower(crossprod(BkrA),-1)
-          Cnew <- Xc%*%BkrA%*%smpower(crossprod(Bnew)*crossprod(Anew),-1)
-        } else if(const[3]==1L) {
-          Zmat <- Xc%*%BkrA
-          Cnew <- Zmat%*%smpower(crossprod(Zmat),-0.5)
-        } else if(const[3]==2L) {
-          cpmat <- crossprod(BkrA)
-          for(ii in 1:xdims[3]){Cnew[ii,] <- fnnls(cpmat,crossprod(BkrA,Xc[ii,]))}
-          if(any(colSums(Cnew)==0)){
-            Cnew <- Cold
-            vtol <- 0
-            cflag <- 2
+        if(is.null(Cstruc)){
+          if(const[3]==0L){
+            #Cnew <- Xc%*%BkrA%*%smpower(crossprod(BkrA),-1)
+            Cnew <- Xc%*%BkrA%*%smpower(crossprod(Bnew)*crossprod(Anew),-1)
+          } else if(const[3]==1L) {
+            Zmat <- Xc%*%BkrA
+            Cnew <- Zmat%*%smpower(crossprod(Zmat),-0.5)
+          } else if(const[3]==2L) {
+            cpmat <- crossprod(BkrA)
+            for(ii in 1:xdims[3]){Cnew[ii,] <- fnnls(cpmat,crossprod(BkrA,Xc[ii,]))}
+            if(any(colSums(Cnew)==0)){
+              Cnew <- Cold
+              vtol <- 0
+              cflag <- 2
+            }
+          } # end if(const[3]==0L)
+        } else {
+          for(u in 1:nfac){
+            Zhat = Xc - tcrossprod(Cnew[,-u],BkrA[,-u])
+            Cnew[,u] = ( (Zhat %*% BkrA[,u]) / sum(BkrA[,u]^2) ) * Cstruc[,u]
           }
-        }
-      }
+        } # end if(is.null(Cstruc))
+      } # end if(is.null(Cfixed))
       
       # Step 4: check for convergence
       for(u in 1:nfac){CkrB[,u] <- kronecker(Cnew[,u],Bnew[,u])}
@@ -144,12 +160,26 @@ parafac_3way <-
       
     }
     
+    ### GCV criterion
+    Adf <- nfac * ifelse(const[1]==1L, xdims[1]-(nfac+1)/2, xdims[1]-1L)
+    Bdf <- ifelse(is.null(Bstruc),
+                  nfac * ifelse(const[2]==1L, xdims[2]-(nfac+1)/2, xdims[2]-1L),
+                  sum(Bstruc) - nfac)
+    Cdf <- ifelse(is.null(Cstruc),
+                  nfac * ifelse(const[3]==1L, xdims[3]-(nfac-1)/2, xdims[3]),
+                  sum(Cstruc))
+    edf <- c(Adf,Bdf,Cdf)
+    pxdim <- prod(xdims)
+    GCV <- (ssenew/pxdim) / (1 - sum(edf)/pxdim)^2
+    
     ### collect results
     Rsq <- 1 - ssenew/xcx
     if(is.na(cflag)){
       if(vtol<=ctol){cflag <- 0} else {cflag <- 1}
     }
-    pfac <- list(A=Anew,B=Bnew,C=Cnew,Rsq=Rsq,iter=iter,cflag=cflag,const=const)
+    names(edf) <- c("A","B","C")
+    pfac <- list(A=Anew,B=Bnew,C=Cnew,Rsq=Rsq,GCV=GCV,edf=edf,
+                 iter=iter,cflag=cflag,const=const)
     return(pfac)
     
   }

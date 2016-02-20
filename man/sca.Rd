@@ -60,6 +60,8 @@ sca(X,nfac,nstart=10,maxit=500,
 \item{C}{Mode C weight matrix.}
 \item{Phi}{Mode A common crossproduct matrix (if \code{type!="sca-p"}).}
 \item{Rsq}{R-squared value.}
+\item{GCV}{Generalized Cross-Validation.}
+\item{edf}{Effective degrees of freedom.}
 \item{iter}{Number of iterations.}
 \item{cflag}{Convergence flag.}
 \item{type}{Same as input \code{type}.}

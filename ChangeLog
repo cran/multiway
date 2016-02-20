@@ -1,3 +1,30 @@
+Changes from ver 1.0-1 to ver 1.0-2     [Feb-19-2016]
+   1) multiway-package
+	*   Added "corcondia" function
+	*   Added "mpinv" function
+	*   Added "GCV" and "edf" to model outputs
+	*   Structure constraints for parafac and parafac2
+	*   Improvements for nscale with list inputs
+   2) corcondia
+	*   New function to calculate Core Consistency Diagnostic
+	*   For examining fit of Parafac or Parafac2 models
+   3) mpinv
+	*   New function to calculate Moore-Penrose Pseudoinverse
+	*   Calculated via stabilized singular value decomposition
+   4) nscale
+	*   Changes in default functioning for lists
+	*   Now possible to scale data modes across or within lists
+   5) parafac and parafac2
+	*   Can input structure matrix to constrain pattern of weights
+	*   Can constrain structure of Phi matrix for parafac2
+   6) parafac, parafac2, sca, and tucker
+	*   Generalized Cross-Validation (GCV) now reported
+	*   Effective degrees of freedom (edf) now reported 
+
+
+
+
+
 Changes from ver 1.0-0 to ver 1.0-1     [Aug-26-2015]
    1) multiway-package
 	*   Speed-ups for indscal, parafac, and parafac2

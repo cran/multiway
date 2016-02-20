@@ -1,10 +1,11 @@
 parafac2_4way <- 
   function(data,nfac,xcx=sumsq(data),const=rep(0L,4),
            maxit=500,ctol=10^-4,Gfixed=NULL,Bfixed=NULL,Cfixed=NULL,
-           Dfixed=NULL,Gstart=NULL,Bstart=NULL,Cstart=NULL,Dstart=NULL){
+           Dfixed=NULL,Gstart=NULL,Bstart=NULL,Cstart=NULL,Dstart=NULL,
+           Gstruc=NULL,Bstruc=NULL,Cstruc=NULL,Dstruc=NULL){
     # 4-way Parallel Factor Analysis 2 (Parafac2)
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: August 26, 2015
+    # last updated: February 15, 2015
     
     ### initialize Khatri-Rao product matrices
     xdims <- rep(NA,4)
@@ -37,6 +38,7 @@ parafac2_4way <-
       } else if(const[1]==1L){
         Gold <- Gnew <- diag(nfac)
       }
+      if(!is.null(Gstruc)) Gold <- Gnew <- Gold * Gstruc
     } else {Gold <- Gnew <- Gfixed}
     if(is.null(Bfixed)){
       if(!is.null(Bstart)){
@@ -48,6 +50,7 @@ parafac2_4way <-
       } else if(const[2]==2L){
         Bold <- Bnew <- matrix(runif(xdims[2]*nfac),xdims[2],nfac)
       }
+      if(!is.null(Bstruc)) Bold <- Bnew <- Bold * Bstruc
     } else {Bold <- Bnew <- Bfixed}
     if(is.null(Cfixed)){
       if(!is.null(Cstart)){
@@ -59,6 +62,7 @@ parafac2_4way <-
       } else if(const[3]==2L){
         Cold <- Cnew <- matrix(runif(xdims[3]*nfac),xdims[3],nfac)
       }
+      if(!is.null(Cstruc)) Cold <- Cnew <- Cold * Cstruc
     } else {Cold <- Cnew <- Cfixed}
     if(is.null(Dfixed)){
       if(!is.null(Dstart)){
@@ -71,6 +75,7 @@ parafac2_4way <-
       } else if(const[4]==2L){
         Dold <- Dnew <- matrix(runif(xdims[4]*nfac),xdims[4],nfac)
       }
+      if(!is.null(Dstruc)) Dold <- Dnew <- Dold * Dstruc
     } else {Dold <- Dnew <- Dfixed}
     
     ### iterative update of matrices
@@ -92,73 +97,101 @@ parafac2_4way <-
         if(const[1]==0L){
           Xa <- matrix(Xtilde,nfac,xdims[2]*xdims[3]*xdims[4])
           for(u in 1:nfac){DCkrB[,u] <- kronecker(Dold[,u],kronecker(Cold[,u],Bold[,u]))}
-          #Gnew <- Xa%*%DCkrB%*%smpower(crossprod(DCkrB),-1)
-          Gnew <- Xa%*%DCkrB%*%smpower(crossprod(Dold)*crossprod(Cold)*crossprod(Bold),-1)
-        }
-      }
+          if(is.null(Gstruc)){
+            #Gnew <- Xa%*%DCkrB%*%smpower(crossprod(DCkrB),-1)
+            Gnew <- Xa%*%DCkrB%*%smpower(crossprod(Dold)*crossprod(Cold)*crossprod(Bold),-1)
+          } else {
+            for(u in 1:nfac){
+              Zhat = Xa - tcrossprod(Gnew[,-u],DCkrB[,-u])
+              Gnew[,u] = ( (Zhat %*% DCkrB[,u]) / sum(DCkrB[,u]^2) ) * Gstruc[,u]
+            }
+          } # end if(is.null(Gstruc))
+        } # end if(const[1]==0L)
+      } # end if(is.null(Gfixed))
       
       ## Step 2: update mode B weights
       if(is.null(Bfixed)){
         Xb <- matrix(aperm(Xtilde,perm=c(2,1,3,4)),xdims[2],nfac*xdims[3]*xdims[4])
         for(u in 1:nfac){DCkrA[,u] <- kronecker(Dold[,u],kronecker(Cold[,u],Gnew[,u]))}
-        if(const[2]==0L){
-          #Bnew <- Xb%*%DCkrA%*%smpower(crossprod(DCkrA),-1)
-          Bnew <- Xb%*%DCkrA%*%smpower(crossprod(Dold)*crossprod(Cold)*crossprod(Gnew),-1)
-        } else if(const[2]==1L) {
-          Zmat <- Xb%*%DCkrA
-          Bnew <- Zmat%*%smpower(crossprod(Zmat),-0.5)
-        } else if(const[2]==2L) {
-          cpmat <- crossprod(DCkrA)
-          for(ii in 1:xdims[2]){Bnew[ii,] <- fnnls(cpmat,crossprod(DCkrA,Xb[ii,]))}
-          if(any(colSums(Bnew)==0)){
-            Bnew <- Bold
-            vtol <- 0
-            cflag <- 2
+        if(is.null(Bstruc)){
+          if(const[2]==0L){
+            #Bnew <- Xb%*%DCkrA%*%smpower(crossprod(DCkrA),-1)
+            Bnew <- Xb%*%DCkrA%*%smpower(crossprod(Dold)*crossprod(Cold)*crossprod(Gnew),-1)
+          } else if(const[2]==1L) {
+            Zmat <- Xb%*%DCkrA
+            Bnew <- Zmat%*%smpower(crossprod(Zmat),-0.5)
+          } else if(const[2]==2L) {
+            cpmat <- crossprod(DCkrA)
+            for(ii in 1:xdims[2]){Bnew[ii,] <- fnnls(cpmat,crossprod(DCkrA,Xb[ii,]))}
+            if(any(colSums(Bnew)==0)){
+              Bnew <- Bold
+              vtol <- 0
+              cflag <- 2
+            }
+          } # end if(const[2]==0L)
+        } else {
+          for(u in 1:nfac){
+            Zhat = Xb - tcrossprod(Bnew[,-u],DCkrA[,-u])
+            Bnew[,u] = ( (Zhat %*% DCkrA[,u]) / sum(DCkrA[,u]^2) ) * Bstruc[,u]
           }
-        }
-      }
+        } # end if(is.null(Bstruc))
+      } # end if(is.null(Bfixed))
       
       ## Step 3: update mode C weights
       if(is.null(Cfixed)){
         Xc <- matrix(aperm(Xtilde,perm=c(3,1,2,4)),xdims[3],nfac*xdims[2]*xdims[4])
         for(u in 1:nfac){DBkrA[,u] <- kronecker(Dold[,u],kronecker(Bnew[,u],Gnew[,u]))}
-        if(const[3]==0L){
-          #Cnew <- Xc%*%DBkrA%*%smpower(crossprod(DBkrA),-1)
-          Cnew <- Xc%*%DBkrA%*%smpower(crossprod(Dold)*crossprod(Bnew)*crossprod(Gnew),-1)
-        } else if(const[3]==1L) {
-          Zmat <- Xc%*%DBkrA
-          Cnew <- Zmat%*%smpower(crossprod(Zmat),-0.5)
-        } else if(const[3]==2L) {
-          cpmat <- crossprod(DBkrA)
-          for(ii in 1:xdims[3]){Cnew[ii,] <- fnnls(cpmat,crossprod(DBkrA,Xc[ii,]))}
-          if(any(colSums(Cnew)==0)){
-            Cnew <- Cold
-            vtol <- 0
-            cflag <- 2
+        if(is.null(Cstruc)){
+          if(const[3]==0L){
+            #Cnew <- Xc%*%DBkrA%*%smpower(crossprod(DBkrA),-1)
+            Cnew <- Xc%*%DBkrA%*%smpower(crossprod(Dold)*crossprod(Bnew)*crossprod(Gnew),-1)
+          } else if(const[3]==1L) {
+            Zmat <- Xc%*%DBkrA
+            Cnew <- Zmat%*%smpower(crossprod(Zmat),-0.5)
+          } else if(const[3]==2L) {
+            cpmat <- crossprod(DBkrA)
+            for(ii in 1:xdims[3]){Cnew[ii,] <- fnnls(cpmat,crossprod(DBkrA,Xc[ii,]))}
+            if(any(colSums(Cnew)==0)){
+              Cnew <- Cold
+              vtol <- 0
+              cflag <- 2
+            }
+          } # end if(const[3]==0L)
+        } else {
+          for(u in 1:nfac){
+            Zhat = Xc - tcrossprod(Cnew[,-u],DBkrA[,-u])
+            Cnew[,u] = ( (Zhat %*% DBkrA[,u]) / sum(DBkrA[,u]^2) ) * Cstruc[,u]
           }
-        }
-      }
+        } # end if(is.null(Cstruc))
+      } # end if(is.null(Cfixed))
       
       ## Step 4: update mode D weights
       if(is.null(Dfixed)){
         Xd <- matrix(aperm(Xtilde,perm=c(4,1,2,3)),xdims[4],nfac*xdims[2]*xdims[3])
         for(u in 1:nfac){CBkrA[,u] <- kronecker(Cnew[,u],kronecker(Bnew[,u],Gnew[,u]))}
-        if(const[4]==0L){
-          #Dnew <- Xd%*%CBkrA%*%smpower(crossprod(CBkrA),-1)
-          Dnew <- Xd%*%CBkrA%*%smpower(crossprod(Cnew)*crossprod(Bnew)*crossprod(Gnew),-1)
-        } else if(const[4]==1L) {
-          Zmat <- Xd%*%CBkrA
-          Dnew <- Zmat%*%smpower(crossprod(Zmat),-0.5)
-        } else if(const[4]==2L) {
-          cpmat <- crossprod(CBkrA)
-          for(ii in 1:xdims[4]){Dnew[ii,] <- fnnls(cpmat,crossprod(CBkrA,Xd[ii,]))}
-          if(any(colSums(Dnew)==0)){
-            Dnew <- Dold
-            vtol <- 0
-            cflag <- 2
+        if(is.null(Dstruc)){
+          if(const[4]==0L){
+            #Dnew <- Xd%*%CBkrA%*%smpower(crossprod(CBkrA),-1)
+            Dnew <- Xd%*%CBkrA%*%smpower(crossprod(Cnew)*crossprod(Bnew)*crossprod(Gnew),-1)
+          } else if(const[4]==1L) {
+            Zmat <- Xd%*%CBkrA
+            Dnew <- Zmat%*%smpower(crossprod(Zmat),-0.5)
+          } else if(const[4]==2L) {
+            cpmat <- crossprod(CBkrA)
+            for(ii in 1:xdims[4]){Dnew[ii,] <- fnnls(cpmat,crossprod(CBkrA,Xd[ii,]))}
+            if(any(colSums(Dnew)==0)){
+              Dnew <- Dold
+              vtol <- 0
+              cflag <- 2
+            }
+          } # end if(const[4]==0L)
+        } else {
+          for(u in 1:nfac){
+            Zhat = Xd - tcrossprod(Dnew[,-u],CBkrA[,-u])
+            Dnew[,u] = ( (Zhat %*% CBkrA[,u]) / sum(CBkrA[,u]^2) ) * Dstruc[,u]
           }
-        }
-      }
+        } # end if(is.null(Dstruc))
+      } # end if(is.null(Dfixed))
       
       ## Step 5: check for convergence
       for(u in 1:nfac){CkrB[,u] <- kronecker(Cnew[,u],Bnew[,u])}
@@ -198,12 +231,34 @@ parafac2_4way <-
       
     }
     
+    ### GCV criterion
+    ntotal <- sum(sapply(data,function(x) dim(x)[1]))
+    Adf <- nfac * (ntotal - xdims[4]*(nfac+1)/2)
+    if(!is.null(Gstruc)) GtG <- crossprod(Gstruc)
+    Gdf <- ifelse(is.null(Gstruc),
+                  ifelse(const[1]==1L, 0, nfac*(nfac-1)/2),
+                  sum(GtG[lower.tri(GtG)]>0L))
+    Bdf <- ifelse(is.null(Bstruc),
+                  nfac * ifelse(const[2]==1L, xdims[2]-(nfac+1)/2, xdims[2]-1L),
+                  sum(Bstruc) - nfac)
+    Cdf <- ifelse(is.null(Cstruc),
+                  nfac * ifelse(const[3]==1L, xdims[3]-(nfac+1)/2, xdims[3]-1L),
+                  sum(Cstruc) - nfac)
+    Ddf <- ifelse(is.null(Dstruc),
+                  nfac * ifelse(const[4]==1L, xdims[4]-(nfac-1)/2, xdims[4]),
+                  sum(Dstruc))
+    edf <- c(Adf+Gdf,Bdf,Cdf,Ddf)
+    pxdim <- ntotal * prod(xdims[2:3])
+    GCV <- (ssenew/pxdim) / (1 - sum(edf)/pxdim)^2
+    
     ### collect results
     Rsq <- 1 - ssenew/xcx
     if(is.na(cflag)){
       if(vtol<=ctol){cflag <- 0} else {cflag <- 1}
     }
-    pfac <- list(A=list(H=Rknew,G=Gnew),B=Bnew,C=Cnew,D=Dnew,Rsq=Rsq,iter=iter,cflag=cflag,const=const)
+    names(edf) <- c("A","B","C","D")
+    pfac <- list(A=list(H=Rknew,G=Gnew),B=Bnew,C=Cnew,D=Dnew,Rsq=Rsq,GCV=GCV,
+                 edf=edf,iter=iter,cflag=cflag,const=const)
     return(pfac)
     
   }
