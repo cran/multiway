@@ -2,11 +2,11 @@ sca <-
   function(X,nfac,nstart=10,maxit=500,
            type=c("sca-p","sca-pf2","sca-ind","sca-ecp"),
            rotation=c("none","varimax","promax"),
-           ctol=10^-4,parallel=FALSE,cl=NULL){
+           ctol=1e-4,parallel=FALSE,cl=NULL){
     # Simultaneous Component Analysis
     # via alternating least squares (ALS) or closed-form solution
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: February 16, 2016
+    # last updated: May 16, 2017
     
     # check 'X' input
     if(is.array(X)){
@@ -45,7 +45,12 @@ sca <-
     
     # check 'type' and 'rotation'
     type <- type[1]
-    if(is.na(match(type,c("sca-p","sca-pf2","sca-ind","sca-ecp")))){stop("Input 'type' must be one of four specified options")}
+    if(is.na(match(type,c("sca-p","sca-pf2","sca-ind","sca-ecp",
+                          "p","pf2","ind","ecp")))){stop("Input 'type' must be one of four specified options")}
+    if(type=="p") type <- "sca-p"
+    if(type=="pf2") type <- "sca-pf2"
+    if(type=="ind") type <- "sca-ind"
+    if(type=="ecp") type <- "sca-ecp"
     rotation <- rotation[1]
     if(is.na(match(rotation,c("none","varimax","promax")))){stop("Input 'rotation' must be one of three specified options")}
     
@@ -113,15 +118,16 @@ sca <-
       Bmat <- scamod$B
       Cmat <- matrix(0,xdim[3],nfac)
       Dmats <- vector("list",xdim[3])
-      gsqrt <- sqrt(colSums(scamod$A$G^2))
+      gsqrt <- sqrt(diag(scamod$Phi))
       for(kk in 1:xdim[3]){
-        Dmats[[kk]] <- scamod$A$H[[kk]]%*%scamod$A$G%*%(diag(nfac)*scamod$C[kk,])
-        Cmat[kk,] <- scamod$C[kk,]*gsqrt/sqrt(dim(scamod$A$H[[kk]])[1])
+        Dmats[[kk]] <- scamod$A[[kk]]%*%(diag(nfac)*scamod$C[kk,])
+        Cmat[kk,] <- scamod$C[kk,]*gsqrt/sqrt(dim(scamod$A[[kk]])[1])
       }
       Rsq <- scamod$Rsq
       iter <- scamod$iter
       cflag <- scamod$cflag
-      Phimat <- crossprod(scamod$A$G%*%(diag(nfac)/gsqrt))
+      Smat <- (diag(nfac)/gsqrt)
+      Phimat <- Smat %*% scamod$Phi %*% Smat
       GCV <- scamod$GCV
       edf <- scamod$edf
     } else if(type[1]=="sca-ind"){
@@ -139,13 +145,13 @@ sca <-
       widx <- which.max(sapply(pfaclist,function(x) x$Rsq))
       scamod <- pfaclist[[widx]]
       rm(pfaclist)
-      dg <- sqrt(colSums(scamod$A$G^2))
+      dg <- sqrt(diag(scamod$Phi))
       Bmat <- scamod$B
       Cmat <- matrix(0,xdim[3],nfac)
       Dmats <- vector("list",xdim[3])
       for(kk in 1:xdim[3]){
-        Dmats[[kk]] <- scamod$A$H[[kk]]%*%scamod$A$G%*%(diag(nfac)*scamod$C[kk,])
-        Cmat[kk,] <- scamod$C[kk,]*(dg/sqrt(dim(scamod$A$H[[kk]])[1]))
+        Dmats[[kk]] <- scamod$A[[kk]]%*%(diag(nfac)*scamod$C[kk,])
+        Cmat[kk,] <- scamod$C[kk,]*(dg/sqrt(dim(scamod$A[[kk]])[1]))
       }
       Rsq <- scamod$Rsq
       iter <- scamod$iter
@@ -171,10 +177,13 @@ sca <-
       widx <- which.max(sapply(pfaclist,function(x) x$Rsq))
       scamod <- pfaclist[[widx]]
       rm(pfaclist)
-      fordr <- order(colSums(scamod$B^2), decreasing = TRUE)
-      scamod$A$G <- as.matrix(scamod$A$G[,fordr])
-      scamod$B <- as.matrix(scamod$B[,fordr])
-      scamod$C <- as.matrix(scamod$C[,fordr])
+      if(nfac > 1L){
+        fordr <- order(colSums(scamod$B^2), decreasing = TRUE)
+        scamod$A <- lapply(scamod$A, function(x) x[,fordr])
+        scamod$B <- scamod$B[,fordr]
+        scamod$C <- scamod$C[,fordr]
+        scamod$Phi <- scamod$Phi[fordr,fordr]
+      }
       Bmat <- scamod$B
       rotmat <- diag(nfac)
       if(rotation=="varimax"){
@@ -187,13 +196,13 @@ sca <-
       } 
       Dmats <- vector("list",xdim[3])
       for(kk in 1:xdim[3]){
-        Dmats[[kk]] <- scamod$A$H[[kk]]%*%scamod$A$G%*%(diag(nfac)*scamod$C[kk,])%*%rotmat
+        Dmats[[kk]] <- scamod$A[[kk]]%*%(diag(nfac)*scamod$C[kk,])%*%rotmat
       }
       Cmat <- scamod$C/nks
       Rsq <- scamod$Rsq
       iter <- scamod$iter
       cflag <- scamod$cflag
-      Phimat <- crossprod(scamod$A$G)
+      Phimat <- scamod$Phi
       ntotal <- sum(sapply(X,nrow))
       Adf <- ntotal - xdim[3]*(nfac+1)/2
       Gdf <- 0
@@ -205,7 +214,7 @@ sca <-
       GCV <- (ssenew/pxdim) / (1 - sum(edf)/pxdim)^2
     }
     names(edf) <- c("A","B","C")
-    scafit <- list(D=Dmats,B=Bmat,C=Cmat,Phi=Phimat,
+    scafit <- list(D=Dmats,B=Bmat,C=Cmat,Phi=Phimat,SSE=xcx*(1-Rsq),
                    Rsq=Rsq,GCV=GCV,edf=edf,iter=iter,cflag=cflag,
                    type=type,rotation=rotation)
     class(scafit) <- "sca"

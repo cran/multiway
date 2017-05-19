@@ -23,7 +23,7 @@ Weight matrices are estimated using an alternating least squares algorithm.
 tucker(X,nfac,nstart=10,Afixed=NULL,
        Bfixed=NULL,Cfixed=NULL,Dfixed=NULL,
        Bstart=NULL,Cstart=NULL,Dstart=NULL,
-       maxit=500,ctol=10^-4,parallel=FALSE,
+       maxit=500,ctol=1e-4,parallel=FALSE,
        cl=NULL,output=c("best","all"))
 }
 \arguments{
@@ -80,6 +80,7 @@ If \code{output="best"}, returns an object of class \code{"tucker"} with the fol
 \item{C}{Mode C weight matrix.}
 \item{D}{Mode D weight matrix.}
 \item{G}{Core array.}
+\item{SSE}{Sum of Squared Errors.}
 \item{Rsq}{R-squared value.}
 \item{GCV}{Generalized Cross-Validation.}
 \item{edf}{Effective degrees of freedom.}
@@ -97,14 +98,14 @@ Tucker, L. R. (1966). Some mathematical notes on three-mode factor analysis. \em
 Nathaniel E. Helwig <helwig@umn.edu>
 }
 \note{
-Default use is 10 random strarts (\code{nstart=10}) with 500 maximum iterations of the ALS algorithm for each start (\code{maxit=500}) using a convergence tolerance of 10^-4 (\code{ctol=10^-4}). The algorithm is determined to have converged once the change in R^2 is less than or equal to \code{ctol}.
+Default use is 10 random strarts (\code{nstart=10}) with 500 maximum iterations of the ALS algorithm for each start (\code{maxit=500}) using a convergence tolerance of 1e-4 (\code{ctol=1e-4}). The algorithm is determined to have converged once the change in R^2 is less than or equal to \code{ctol}.
 
 Output \code{cflag} gives convergence information: \code{cflag=0} if ALS algorithm converged normally, and \code{cflag=1} if maximum iteration limit was reached before convergence.
 }
 \section{Warnings }{
 The ALS algorithm can perform poorly if the number of factors \code{nfac} is set too large.
 
-Input matrices in \code{Afixed}, \code{Bfixed}, \code{Cfixed}, \code{Dfixed}, \code{Bstart}, \code{Cstart},  and \code{Dstart} must be columnwise orthonormal.
+Input matrices in \code{Afixed}, \code{Bfixed}, \code{Cfixed}, \code{Dfixed}, \code{Bstart}, \code{Cstart}, and \code{Dstart} must be columnwise orthonormal.
 }
 
 \examples{
@@ -125,7 +126,7 @@ X <- Xmat + Emat
 
 # fit Tucker model
 tuck <- tucker(X,nfac=nf,nstart=1)
-tuck$Rsq
+tuck
 
 # check solution
 Xhat <- fitted(tuck)
@@ -176,7 +177,7 @@ X <- Xmat + Emat
 
 # fit Tucker model
 tuck <- tucker(X,nfac=nf,nstart=1)
-tuck$Rsq
+tuck
 
 # check solution
 Xhat <- fitted(tuck)

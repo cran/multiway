@@ -1,3 +1,60 @@
+Changes from ver 1.0-2 to ver 1.0-3     [May-17-2017]
+   1) multiway-package
+	*   Bug fix: starting values and non-negativity constraints (parafac and parafac2)
+	*   Bug fix: when using rescale.sca with type="sca-ecp"
+	*   Reformatted the output for indscal (now more comparable to other outputs)
+	*   Reformatted the output for parafac2 (now x$A is list of Mode A weights)
+	*   Added unimodal, monotonic, periodic, and smoothness constraints to parafac and parafac2
+	*   Added const.control argument to control new constraint options
+	*   Added print method for indscal, parafac, parafac2, sca, and tucker objects
+	*   Added sum of squared errors to output results (x$SSE)
+	*   Components are no longer ordered according to R^2 when using structure constraints
+	*   Added identifiability check on number of factors for tucker model
+	*   Improvements to internals of smpower function
+   2) const.control
+	*   New function to control the functional constraints (3-6)
+	*   Can adjust the degrees of freedom (df) for spline basis
+	*   Can adjust the polynomial degree (degree) for spline basis
+	*   Can constrain the function to be non-negative (nonneg)
+   3) indscal
+	*   Added print method (prints constraint, fit, and convergence information)
+	*   Added various items to output (to be comparable to other methods)
+	*   Added sum of squared errors to output results (x$SSE)
+	*   Removed x$strain output (because this is equal to x$SSE)
+   4) parafac
+	*   Bug fix: now possible to use starting values and non-negativity constraints on same mode
+	*   Added print method (prints constraint, fit, and convergence information)
+	*   Added sum of squared errors to output results (x$SSE)
+	*   New constraint option: const[j]=3 for unimodal constraint
+	*   New constraint option: const[j]=4 for monotonic constraint
+	*   New constraint option: const[j]=5 for periodic constraint
+	*   New constraint option: const[j]=6 for smoothness constraint
+	*   New constraint option: control argument can be used to control options for constraints 3-6
+   5) parafac2
+	*   Change in formatting of output: 
+               - x$A is now a list of Mode A weights
+               - x$Phi is the common crossproduct matrix for Mode A
+	*   Added print method (prints constraint, fit, and convergence information)
+	*   Added sum of squared errors to output results (x$SSE)
+	*   Bug fix: now possible to use starting values and non-negativity constraints on same mode
+	*   New constraint option: const[j]=3 for unimodal constraint
+	*   New constraint option: const[j]=4 for monotonic constraint
+	*   New constraint option: const[j]=5 for periodic constraint
+	*   New constraint option: const[j]=6 for smoothness constraint
+	*   New constraint option: control argument can be used to control options for constraints 3-6
+   6) sca
+	*   Bug fix: rescale.sca with type="sca-ecp" (fixed rescaling of Phi matrix)
+	*   Added print method (prints constraint, fit, and convergence information)
+	*   Added sum of squared errors to output results (x$SSE)
+   7) tucker
+	*   Added print method (prints constraint, fit, and convergence information)
+	*   Added identifiability constraint for 'nfac' input:  need nfac[j] <= prod(nfac[-j])
+	*   Added sum of squared errors to output results (x$SSE)
+
+
+
+
+
 Changes from ver 1.0-1 to ver 1.0-2     [Feb-19-2016]
    1) multiway-package
 	*   Added "corcondia" function

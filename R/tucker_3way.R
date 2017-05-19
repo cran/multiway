@@ -1,10 +1,10 @@
 tucker_3way <-
   function(data,nfac,xcx=sumsq(data),maxit=500,
-           ctol=10^-4,Afixed=NULL,Bfixed=NULL,Cfixed=NULL,
+           ctol=1e-4,Afixed=NULL,Bfixed=NULL,Cfixed=NULL,
            Bstart=NULL,Cstart=NULL){
     # 3-way Tucker model
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: October 14, 2015
+    # last updated: May 4, 2017
     
     ### initialize reshaped data matrices
     xdims <- dim(data)
@@ -71,7 +71,7 @@ tucker_3way <-
     }
     names(edf) <- c("A","B","C","G")
     tuck <- list(A=Anew,B=Bnew,C=Cnew,G=array(Ga,dim=nfac),
-                 Rsq=Rsq,GCV=GCV,edf=edf,iter=iter,cflag=cflag)
+                 SSE=ssenew,Rsq=Rsq,GCV=GCV,edf=edf,iter=iter,cflag=cflag)
     return(tuck)
     
   }

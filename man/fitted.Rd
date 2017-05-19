@@ -14,13 +14,16 @@ Calculates fitted array (or list of arrays) from a \code{multiway} object.
 \usage{
 \method{fitted}{indscal}(object,...)
 \method{fitted}{parafac}(object,...)
-\method{fitted}{parafac2}(object,...)
+\method{fitted}{parafac2}(object,simplify=TRUE,...)
 \method{fitted}{sca}(object,...)
 \method{fitted}{tucker}(object,...)
 }
 \arguments{
   \item{object}{
   	Object of class "indscal" (output from \code{\link{indscal}}), class "parafac" (output from \code{\link{parafac}}), class "parafac2" (output from \code{\link{parafac2}}), class "sca" (output from \code{\link{sca}}), or class "tucker" (output from \code{\link{tucker}}).
+}
+  \item{simplify}{
+  For "parafac2", setting \code{simplify=FALSE} will always return a list of fitted arrays. Default of \code{simplify=TRUE} returns a fitted array if all levels of the nesting mode have the same number of observations (and a list of fitted arrays otherwise).
 }
   \item{\ldots}{
   Ignored.
@@ -31,7 +34,7 @@ Calculates fitted array (or list of arrays) from a \code{multiway} object.
   
   "parafac" objects: 3-way or 4-way array.
   
-  "parafac2" objects: list of 2-way or 3-way arrays.
+  "parafac2" objects: 3-way or 4-way array (if possible and simplify=TRUE); otherwise list of 2-way or 3-way arrays.
   
   "sca" objects: list of 2-way arrays.
   

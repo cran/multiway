@@ -15,7 +15,7 @@ Weight matrices are estimated using an alternating least squares algorithm with 
 \usage{
 indscal(X,nfac,nstart=10,const=NULL,maxit=500,
         type=c("dissimilarity","similarity"),
-        ctol=10^-4,parallel=FALSE,cl=NULL,
+        ctol=1e-4,parallel=FALSE,cl=NULL,
         output=c("best","all"))
 }
 \arguments{
@@ -54,18 +54,20 @@ indscal(X,nfac,nstart=10,const=NULL,maxit=500,
 If \code{output="best"}, returns an object of class \code{"indscal"} with the following elements:
 \item{B}{Mode B weight matrix.}
 \item{C}{Mode C weight matrix.}
+\item{SSE}{Sum of Squared Errors.}
 \item{Rsq}{R-squared value.}
+\item{GCV}{Generalized Cross-Validation.}
+\item{edf}{Effective degrees of freedom.}
 \item{iter}{Number of iterations.}
 \item{cflag}{Convergence flag.}
-\item{const}{Same as input.}
-\item{strain}{MDS loss function.}
+\item{const}{See argument \code{const}.}
 
 Otherwise returns a list of length \code{nstart} where each element is an object of class \code{"indscal"}.
 }
 \references{
 Bro, R., & De Jong, S. (1997). A fast non-negativity-constrained least squares algorithm. \emph{Journal of Chemometrics, 11}, 393-401.
 
-Carroll, J. D., & Chang, J-J. (1970). Analysis of individual differences in multidimensional scaling via an n-way generalization of "Eckart-Young" decmoposition. \emph{Psychometrika, 35}, 283-319.
+Carroll, J. D., & Chang, J-J. (1970). Analysis of individual differences in multidimensional scaling via an n-way generalization of "Eckart-Young" decomposition. \emph{Psychometrika, 35}, 283-319.
 
 Harshman, R. A. (1970). Foundations of the PARAFAC procedure: Models and conditions for an "explanatory" multimodal factor analysis. \emph{UCLA Working Papers in Phonetics, 16}, 1-84.
 
@@ -75,7 +77,7 @@ Harshman, R. A., & Lundy, M. E. (1994). PARAFAC: Parallel factor analysis. \emph
 Nathaniel E. Helwig <helwig@umn.edu>
 }
 \note{
-Default use is 10 random strarts (\code{nstart=10}) with 500 maximum iterations of the ALS algorithm for each start (\code{maxit=500}) using a convergence tolerance of 10^-4 (\code{ctol=10^-4}). The algorithm is determined to have converged once the change in R^2 is less than or equal to \code{ctol}.
+Default use is 10 random strarts (\code{nstart=10}) with 500 maximum iterations of the ALS algorithm for each start (\code{maxit=500}) using a convergence tolerance of 1e-4 (\code{ctol=1e-4}). The algorithm is determined to have converged once the change in R^2 is less than or equal to \code{ctol}.
 
 Input \code{const} should be a two element integer vector giving constraints for Modes B and C. There are four possible options:
 \tabular{rl}{
@@ -108,12 +110,12 @@ for(k in 1:mydim[3]) {
 
 # fit INDSCAL model (unconstrained)
 imod <- indscal(X,nfac=nf,nstart=1)
-imod$Rsq
+imod
 
 # check solution
 Xhat <- fitted(imod)
 sum((array(apply(X,3,ed2sp),dim=dim(X))-Xhat)^2)
-imod$strain
+imod$SSE
 
 # reorder and resign factors
 imod$B[1:4,]
@@ -122,7 +124,7 @@ imod$B[1:4,]
 imod <- resign(imod, newsign=c(1,-1))
 imod$B[1:4,]
 sum((array(apply(X,3,ed2sp),dim=dim(X))-Xhat)^2)
-imod$strain
+imod$SSE
 
 # rescale factors
 colSums(imod$B^2)
@@ -131,7 +133,7 @@ imod <- rescale(imod, mode="C")
 colSums(imod$B^2)
 colSums(imod$C^2)
 sum((array(apply(X,3,ed2sp),dim=dim(X))-Xhat)^2)
-imod$strain
+imod$SSE
 
 
 ##########   list example   ##########
@@ -147,12 +149,12 @@ for(k in 1:mydim[3]) {
 
 # fit INDSCAL model (orthogonal B, non-negative C)
 imod <- indscal(X,nfac=nf,nstart=1,const=c(1,2))
-imod$Rsq
+imod
 
 # check solution
 Xhat <- fitted(imod)
 sum((array(unlist(lapply(X,ed2sp)),dim=mydim[c(2,2,3)])-Xhat)^2)
-imod$strain
+imod$SSE
 crossprod(imod$B)
 
 
@@ -172,14 +174,14 @@ for(k in 1:mydim[3]) {
 # fit INDSCAL model (10 random starts -- sequential computation)
 set.seed(1)
 system.time({imod <- indscal(X,nfac=nf)})
-imod$Rsq
+imod
 
 # fit INDSCAL model (10 random starts -- parallel computation)
 set.seed(1)
 cl <- makeCluster(detectCores())
 ce <- clusterEvalQ(cl,library(multiway))
 system.time({imod <- indscal(X,nfac=nf,parallel=TRUE,cl=cl)})
-imod$Rsq
+imod
 stopCluster(cl)
 }
 

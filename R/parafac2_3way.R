@@ -1,11 +1,12 @@
 parafac2_3way <- 
   function(data,nfac,xcx=sumsq(data),const=rep(0L,3),
-           maxit=500,ctol=10^-4,Gfixed=NULL,Bfixed=NULL,
+           maxit=500,ctol=1e-4,Gfixed=NULL,Bfixed=NULL,
            Cfixed=NULL,Gstart=NULL,Bstart=NULL,Cstart=NULL,
-           Gstruc=NULL,Bstruc=NULL,Cstruc=NULL){
+           Gstruc=NULL,Bstruc=NULL,Cstruc=NULL,
+           control=const.control(const)){
     # 3-way Parallel Factor Analysis 2 (Parafac2)
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: February 15, 2016
+    # last updated: May 16, 2017
     
     ### initialize Khatri-Rao product matrices
     xdims <- rep(NA,3)
@@ -19,33 +20,80 @@ parafac2_3way <-
     Rknew <- vector("list",xdims[3])
     Xtilde <- array(0,dim=c(nfac,xdims[2],xdims[3]))
     
+    ### check for periodicity and smoothness on Mode A
+    nx <- sapply(data, nrow)
+    if(const[1]==5L){
+      if(min(nx) == max(nx)){
+        SAMEMODEA <- TRUE
+        Ra <- tcrossprod(svd(cbind(1,MsplineBasis(1:nx[1], df=control$df[1], degree=control$degree[1], intercept=FALSE)$X[,-control$df[1]]))$u)
+      } else {
+        SAMEMODEA <- FALSE
+        Ra <- vector("list",xdims[3])
+        for(k in 1:xdims[3]) Ra[[k]] <- tcrossprod(svd(cbind(1,MsplineBasis(1:nx[k], df=control$df[1], degree=control$degree[1], intercept=FALSE)$X[,-control$df[1]]))$u)
+      }
+    } else if(const[1]==6L){
+      if(min(nx) == max(nx)){
+        SAMEMODEA <- TRUE
+        Ra <- tcrossprod(svd(MsplineBasis(1:nx[1], df=control$df[1], degree=control$degree[1], intercept=TRUE)$X)$u)
+      } else {
+        SAMEMODEA <- FALSE
+        Ra <- vector("list",xdims[3])
+        for(k in 1:xdims[3]) Ra[[k]] <- tcrossprod(svd(MsplineBasis(1:nx[k], df=control$df[1], degree=control$degree[1], intercept=TRUE)$X)$u)
+      }
+    }
+    
     ### initialize parameter matrices
     if(is.null(Gfixed)){
       if(!is.null(Gstart)){
-        Gold <- Gstart
-      } else if(const[1]==0L){
-        Gold <- matrix(rnorm(nfac^2),nfac,nfac)
+        Gold <- Gnew <- Gstart
+      } else if(const[1]==0L | const[1]==5L | const[1]==6L){
+        GG <- matrix(rnorm(nfac^2),nfac,nfac)
+        Gold <- Gnew <- GG %*% diag(sign(colSums(GG^3)))
         #Gold <- Gold %*% (diag(nfac)/sqrt(colSums(Gold^2)))
       } else if(const[1]==1L){
         Gold <- Gnew <- diag(nfac)
       }
       if(!is.null(Gstruc)) Gold <- Gnew <- Gold * Gstruc
-    } else {Gold <- Gnew <- Gfixed}
+    } else {
+      Gold <- Gnew <- Gfixed
+    }
     if(is.null(Bfixed)){
       if(!is.null(Bstart)){
-        Bold <- Bstart
+        Bold <- Bnew <- Bstart
       } else if(const[2]==0L){
         Bold <- matrix(rnorm(xdims[2]*nfac),xdims[2],nfac)
       } else if(const[2]==1L){
         Bold <- svd(matrix(rnorm(xdims[2]*nfac),xdims[2],nfac),nu=nfac,nv=0)$u
       } else if(const[2]==2L){
         Bold <- Bnew <- matrix(runif(xdims[2]*nfac),xdims[2],nfac)
+      } else if(const[2]==3L){
+        Bold <- Bnew <- replicate(nfac, rfunc(1:xdims[2], df=control$df[2], degree=control$degree[2], type="uni", nonneg=control$nonneg[2]))
+        Bdf <- rep(0, nfac)
+      } else if(const[2]==4L){
+        Bold <- Bnew <- replicate(nfac, rfunc(1:xdims[2], df=control$df[2], degree=control$degree[2], type="mon", nonneg=control$nonneg[2]))
+        Bdf <- rep(0, nfac)
+      } else if(const[2]==5L){
+        Bold <- Bnew <- replicate(nfac, rfunc(1:xdims[2], df=control$df[2], degree=control$degree[2], type="per", nonneg=control$nonneg[2]))
+        Bdf <- rep(0, nfac)
+        if(!control$nonneg[2]) {
+          Rb <- tcrossprod(svd(cbind(1,MsplineBasis(1:xdims[2], df=control$df[2], degree=control$degree[2], intercept=FALSE)$X[,-control$df[2]]))$u)
+          Bdf <- rep(control$df[2], nfac)
+        }
+      } else if (const[2]==6L){
+        Bold <- Bnew <- replicate(nfac, rfunc(1:xdims[2], df=control$df[2], degree=control$degree[2], type="smo", nonneg=control$nonneg[2]))
+        Bdf <- rep(0, nfac)
+        if(!control$nonneg[2]) {
+          Rb <- tcrossprod(svd(MsplineBasis(1:xdims[2], df=control$df[2], degree=control$degree[2], intercept=TRUE)$X)$u)
+          Bdf <- rep(control$df[2], nfac)
+        }
       }
       if(!is.null(Bstruc)) Bold <- Bnew <- Bold * Bstruc
-    } else {Bold <- Bnew <- Bfixed}
+    } else {
+      Bold <- Bnew <- Bfixed
+    }
     if(is.null(Cfixed)){
       if(!is.null(Cstart)){
-        Cold <- Cstart
+        Cold <- Cnew <- Cstart
       } else if(const[3]==0L){
         #Cold <- matrix(rnorm(xdims[3]*nfac),xdims[3],nfac)
         Cold <- matrix(runif(xdims[3]*nfac),xdims[3],nfac)
@@ -53,9 +101,31 @@ parafac2_3way <-
         Cold <- svd(matrix(rnorm(xdims[3]*nfac),xdims[3],nfac),nu=nfac,nv=0)$u
       } else if(const[3]==2L){
         Cold <- Cnew <- matrix(runif(xdims[3]*nfac),xdims[3],nfac)
+      } else if(const[3]==3L){
+        Cold <- Cnew <- replicate(nfac, rfunc(1:xdims[3], df=control$df[3], degree=control$degree[3], type="uni", nonneg=control$nonneg[3]))
+        Cdf <- rep(0, nfac)
+      } else if(const[3]==4L){
+        Cold <- Cnew <- replicate(nfac, rfunc(1:xdims[3], df=control$df[3], degree=control$degree[3], type="mon", nonneg=control$nonneg[3]))
+        Cdf <- rep(0, nfac)
+      } else if(const[3]==5L){
+        Cold <- Cnew <- replicate(nfac, rfunc(1:xdims[3], df=control$df[3], degree=control$degree[3], type="per", nonneg=control$nonneg[3]))
+        Cdf <- rep(0, nfac)
+        if(!control$nonneg[3]) {
+          Rc <- tcrossprod(svd(cbind(1,MsplineBasis(1:xdims[3], df=control$df[3], degree=control$degree[3], intercept=FALSE)$X[,-control$df[3]]))$u)
+          Cdf <- rep(control$df[3], nfac)
+        }
+      } else if(const[3]==6L){
+        Cold <- Cnew <- replicate(nfac, rfunc(1:xdims[3], df=control$df[3], degree=control$degree[3], type="smo", nonneg=control$nonneg[3]))
+        Cdf <- rep(0, nfac)
+        if(!control$nonneg[3]) {
+          Rc <- tcrossprod(svd(MsplineBasis(1:xdims[3], df=control$df[3], degree=control$degree[3], intercept=TRUE)$X)$u)
+          Cdf <- rep(control$df[3], nfac)
+        }
       }
       if(!is.null(Cstruc)) Cold <- Cnew <- Cold * Cstruc
-    } else {Cold <- Cnew <- Cfixed}
+    } else {
+      Cold <- Cnew <- Cfixed
+    }
     
     ### iterative update of matrices
     vtol <- sseold <- xcx
@@ -65,26 +135,44 @@ parafac2_3way <-
       
       ## Step 1: update mode A weights
       # 1a: update orthogonal projections
-      for(kk in 1:xdims[3]){
-        xsvd <- svd(data[[kk]]%*%Bold%*%tcrossprod((diag(nfac)*Cold[kk,]),Gold))
-        Rknew[[kk]] <- tcrossprod(xsvd$u,xsvd$v)
-        Xtilde[,,kk] <- crossprod(Rknew[[kk]],data[[kk]])
+      if(any(const[1]==c(5L,6L))){
+        if(SAMEMODEA){
+          for(kk in 1:xdims[3]){
+            xsvd <- svd(Ra%*%data[[kk]]%*%Bold%*%tcrossprod((diag(nfac)*Cold[kk,]),Gold))
+            Rknew[[kk]] <- tcrossprod(xsvd$u,xsvd$v)
+            Xtilde[,,kk] <- crossprod(Rknew[[kk]],data[[kk]])
+          }
+        } else {
+          for(kk in 1:xdims[3]){
+            xsvd <- svd(Ra[[kk]]%*%data[[kk]]%*%Bold%*%tcrossprod((diag(nfac)*Cold[kk,]),Gold))
+            Rknew[[kk]] <- tcrossprod(xsvd$u,xsvd$v)
+            Xtilde[,,kk] <- crossprod(Rknew[[kk]],data[[kk]])
+          }
+        }
+      } else {
+        for(kk in 1:xdims[3]){
+          xsvd <- svd(data[[kk]]%*%Bold%*%tcrossprod((diag(nfac)*Cold[kk,]),Gold))
+          Rknew[[kk]] <- tcrossprod(xsvd$u,xsvd$v)
+          Xtilde[,,kk] <- crossprod(Rknew[[kk]],data[[kk]])
+        }
       }
       # 1b: update correlation matrix
       if(is.null(Gfixed)){
-        if(const[1]==0L){
-          Xa <- matrix(Xtilde,nfac,xdims[2]*xdims[3])
-          for(u in 1:nfac){CkrB[,u] <- kronecker(Cold[,u],Bold[,u])}
-          if(is.null(Gstruc)){
+        if(is.null(Gstruc)){
+          if(const[1]!=1L){
+            Xa <- matrix(Xtilde,nfac,xdims[2]*xdims[3])
+            for(u in 1:nfac){CkrB[,u] <- kronecker(Cold[,u],Bold[,u])}
             #Gnew <- Xa%*%CkrB%*%smpower(crossprod(CkrB),-1)
             Gnew <- Xa%*%CkrB%*%smpower(crossprod(Cold)*crossprod(Bold),-1)
-          } else {
-            for(u in 1:nfac){
-              Zhat = Xa - tcrossprod(Gnew[,-u],CkrB[,-u])
-              Gnew[,u] = ( (Zhat %*% CkrB[,u]) / sum(CkrB[,u]^2) ) * Gstruc[,u]
-            }
-          } # end if(is.null(Gstruc))
-        } # end if(const[1]==0L)
+          }
+        } else {
+          Xa <- matrix(Xtilde,nfac,xdims[2]*xdims[3])
+          for(u in 1:nfac){CkrB[,u] <- kronecker(Cold[,u],Bold[,u])}
+          for(u in 1:nfac){
+            Zhat <- Xa - tcrossprod(Gnew[,-u],CkrB[,-u])
+            Gnew[,u] <- ( (Zhat %*% CkrB[,u]) / sum(CkrB[,u]^2) ) * Gstruc[,u]
+          }
+        } # end if(is.null(Gstruc))
       } # end if(is.null(Gfixed))
       
       ## Step 2: update mode B weights
@@ -101,16 +189,66 @@ parafac2_3way <-
           } else if(const[2]==2L) {
             cpmat <- crossprod(CkrA)
             for(ii in 1:xdims[2]){Bnew[ii,] <- fnnls(cpmat,crossprod(CkrA,Xb[ii,]))}
+            zix <- which(Bnew <= 1e-9)
+            if(length(zix) > 0) Bnew[zix] <- 0
             if(any(colSums(Bnew)==0)){
               Bnew <- Bold
               vtol <- 0
               cflag <- 2
             }
+          } else if(const[2]==3L){
+            for(u in 1:nfac){
+              Zhat <- Xb - tcrossprod(Bnew[,-u],CkrA[,-u])
+              fit <- fumls(1:xdims[2], Zhat %*% CkrA[,u] / sum(CkrA[,u]^2), df=control$df[2], degree=control$degree[2], lower=ifelse(control$nonneg[2],0,-Inf))
+              Bdf[u] <- fit$edf
+              Bnew[,u] <- fit$fitted.values
+            }
+            zix <- which(Bnew <= 1e-9)
+            if(length(zix) > 0) Bnew[zix] <- 0
+            if(any(colSums(Bnew)==0)){
+              Bnew <- Bold
+              vtol <- 0
+              cflag <- 2
+            }
+          } else if(const[2]==4L){
+            for(u in 1:nfac){
+              Zhat <- Xb - tcrossprod(Bnew[,-u],CkrA[,-u])
+              fit <- fmnls(1:xdims[2], Zhat %*% CkrA[,u] / sum(CkrA[,u]^2), df=control$df[2], degree=control$degree[2], lower=ifelse(control$nonneg[2],0,-Inf))
+              Bdf[u] <- fit$edf
+              Bnew[,u] <- fit$fitted.values
+            }
+            zix <- which(Bnew <= 1e-9)
+            if(length(zix) > 0) Bnew[zix] <- 0
+            if(any(colSums(Bnew)==0)){
+              Bnew <- Bold
+              vtol <- 0
+              cflag <- 2
+            }
+          } else if(const[2]==5L | const[2]==6L){
+            for(u in 1:nfac){
+              Zhat <- Xb - tcrossprod(Bnew[,-u],CkrA[,-u])
+              if(control$nonneg[2]){
+                fit <- fsmls(1:xdims[2], Zhat %*% CkrA[,u] / sum(CkrA[,u]^2), df=control$df[2], degree=control$degree[2], nonneg=TRUE, periodic=ifelse(const[2]==5L,TRUE,FALSE))
+                Bdf[u] <- fit$edf
+                Bnew[,u] <- fit$fitted.values
+              } else {
+                Bnew[,u] <- Rb %*% Zhat %*% CkrA[,u] / sum(CkrA[,u]^2)
+              }
+            }
+            if(control$nonneg[2]){
+              zix <- which(Bnew <= 1e-9)
+              if(length(zix) > 0) Bnew[zix] <- 0
+              if(any(colSums(Bnew)==0)){
+                Bnew <- Bold
+                vtol <- 0
+                cflag <- 2
+              }
+            }
           } # end if(const[2]==0L)
         } else {
           for(u in 1:nfac){
-            Zhat = Xb - tcrossprod(Bnew[,-u],CkrA[,-u])
-            Bnew[,u] = ( (Zhat %*% CkrA[,u]) / sum(CkrA[,u]^2) ) * Bstruc[,u]
+            Zhat <- Xb - tcrossprod(Bnew[,-u],CkrA[,-u])
+            Bnew[,u] <- ( (Zhat %*% CkrA[,u]) / sum(CkrA[,u]^2) ) * Bstruc[,u]
           }
         } # end if(is.null(Bstruc))
       } # end if(is.null(Bfixed))
@@ -129,16 +267,66 @@ parafac2_3way <-
           } else if(const[3]==2L) {
             cpmat <- crossprod(BkrA)
             for(ii in 1:xdims[3]){Cnew[ii,] <- fnnls(cpmat,crossprod(BkrA,Xc[ii,]))}
+            zix <- which(Cnew <= 1e-9)
+            if(length(zix) > 0) Cnew[zix] <- 0
             if(any(colSums(Cnew)==0)){
               Cnew <- Cold
               vtol <- 0
               cflag <- 2
             }
+          } else if(const[3]==3L){
+            for(u in 1:nfac){
+              Zhat <- Xc - tcrossprod(Cnew[,-u],BkrA[,-u])
+              fit <- fumls(1:xdims[3], Zhat %*% BkrA[,u] / sum(BkrA[,u]^2), df=control$df[3], degree=control$degree[3], lower=ifelse(control$nonneg[3],0,-Inf))
+              Cdf[u] <- fit$edf
+              Cnew[,u] <- fit$fitted.values
+            }
+            zix <- which(Cnew <= 1e-9)
+            if(length(zix) > 0) Cnew[zix] <- 0
+            if(any(colSums(Cnew)==0)){
+              Cnew <- Cold
+              vtol <- 0
+              cflag <- 2
+            }
+          } else if(const[3]==4L){
+            for(u in 1:nfac){
+              Zhat <- Xc - tcrossprod(Cnew[,-u],BkrA[,-u])
+              fit <- fmnls(1:xdims[3], Zhat %*% BkrA[,u] / sum(BkrA[,u]^2), df=control$df[3], degree=control$degree[3], lower=ifelse(control$nonneg[3],0,-Inf))
+              Cdf[u] <- fit$edf
+              Cnew[,u] <- fit$fitted.values
+            }
+            zix <- which(Cnew <= 1e-9)
+            if(length(zix) > 0) Cnew[zix] <- 0
+            if(any(colSums(Cnew)==0)){
+              Cnew <- Cold
+              vtol <- 0
+              cflag <- 2
+            }
+          } else if(const[3]==5L | const[3]==6L){
+            for(u in 1:nfac){
+              Zhat <- Xc - tcrossprod(Cnew[,-u],BkrA[,-u])
+              if(control$nonneg[3]){
+                fit <- fsmls(1:xdims[3], Zhat %*% BkrA[,u] / sum(BkrA[,u]^2), df=control$df[3], degree=control$degree[3], nonneg=TRUE, periodic=ifelse(const[3]==5L,TRUE,FALSE))
+                Cdf[u] <- fit$edf
+                Cnew[,u] <- fit$fitted.values
+              } else {
+                Cnew[,u] <- Rc %*% Zhat %*% BkrA[,u] / sum(BkrA[,u]^2)
+              }
+            }
+            if(control$nonneg[3]){
+              zix <- which(Cnew <= 1e-9)
+              if(length(zix) > 0) Cnew[zix] <- 0
+              if(any(colSums(Cnew)==0)){
+                Cnew <- Cold
+                vtol <- 0
+                cflag <- 2
+              }
+            }
           } # end if(const[3]==0L)
         } else {
           for(u in 1:nfac){
-            Zhat = Xc - tcrossprod(Cnew[,-u],BkrA[,-u])
-            Cnew[,u] = ( (Zhat %*% BkrA[,u]) / sum(BkrA[,u]^2) ) * Cstruc[,u]
+            Zhat <- Xc - tcrossprod(Cnew[,-u],BkrA[,-u])
+            Cnew[,u] <- ( (Zhat %*% BkrA[,u]) / sum(BkrA[,u]^2) ) * Cstruc[,u]
           }
         } # end if(is.null(Cstruc))
       } # end if(is.null(Cfixed))
@@ -169,28 +357,85 @@ parafac2_3way <-
       Cnew <- Cnew%*%(diag(nfac)*((adg*bdg)^0.5))
       
       # order according to sum-of-squares
-      fordr <- order(colSums(Cnew^2),decreasing=TRUE)
-      Gnew <- as.matrix(Gnew[,fordr])
-      Bnew <- as.matrix(Bnew[,fordr])
-      Cnew <- as.matrix(Cnew[,fordr])
+      if(is.null(Gstruc) & is.null(Bstruc) & is.null(Cstruc)){
+        fordr <- order(colSums(Cnew^2),decreasing=TRUE)
+        Gnew <- as.matrix(Gnew[,fordr])
+        Bnew <- as.matrix(Bnew[,fordr])
+        Cnew <- as.matrix(Cnew[,fordr])
+      }
       
     }
     
-    ### GCV criterion
-    ntotal <- sum(sapply(data,nrow))
+    ### effective degrees of freedom (Mode A; orthogonal basis)
+    if(any(const[1]==c(5L,6L))){
+      ntotal <- xdims[3] * control$df[1]
+    } else {
+      ntotal <- sum(nx)
+    } # end if(const[1]==5L)
     Adf <- nfac * (ntotal - xdims[3]*(nfac+1)/2)
-    if(!is.null(Gstruc)) GtG <- crossprod(Gstruc)
-    Gdf <- ifelse(is.null(Gstruc),
-                  ifelse(const[1]==1L, 0, nfac*(nfac-1)/2),
-                  sum(GtG[lower.tri(GtG)]>0L))
-    Bdf <- ifelse(is.null(Bstruc),
-                  nfac * ifelse(const[2]==1L, xdims[2]-(nfac+1)/2, xdims[2]-1L),
-                  sum(Bstruc) - nfac)
-    Cdf <- ifelse(is.null(Cstruc),
-                  nfac * ifelse(const[3]==1L, xdims[3]-(nfac-1)/2, xdims[3]),
-                  sum(Cstruc))
+    
+    ### effective degrees of freedom (Mode A; crossproducts)
+    if(is.null(Gfixed)){
+      if(is.null(Gstruc)){
+        if(const[1]==1L){
+          Gdf <- 0
+        } else {
+          Gdf <- nfac * (nfac - 1L) / 2
+        }
+      } else {
+        GtG <- crossprod(Gstruc)
+        Gdf <- sum(GtG[lower.tri(GtG)]>0L)
+      } # end if(is.null(Gstruc))
+    } else {
+      Gdf <- 0
+    } # end if(is.null(Gfixed))
+    
+    ### effective degrees of freedom (Mode B)
+    if(is.null(Bfixed)){
+      if(is.null(Bstruc)){
+        if(const[2]==0L){
+          Bdf <- nfac * (xdims[2] - 1L)
+        } else if(const[2]==1L){
+          Bdf <- nfac * (xdims[2] - (nfac+1)/2)
+        } else if(const[2]==2L){
+          Bdf <- nfac * (xdims[2] - 1L) - sum(Bnew==0)
+        } else if(const[2]>=3L & const[2]<=6L){
+          Bdf <- sum(Bdf) - nfac
+        } 
+      } else {
+        Bdf <- sum(Bstruc) - nfac
+      } # end if(is.null(Bstruc))
+    } else {
+      Bdf <- 0
+    } # end if(is.null(Bfixed))
+    
+    ### effective degrees of freedom (Mode C)
+    if(is.null(Cfixed)){
+      if(is.null(Cstruc)){
+        if(const[3]==0L){
+          Cdf <- nfac * xdims[3]
+        } else if(const[3]==1L){
+          Cdf <- nfac * (xdims[3] - (nfac-1)/2)
+        } else if(const[3]==2L){
+          Cdf <- nfac * xdims[3] - sum(Cnew==0)
+        } else if(const[3]>=3L & const[3]<=6L){
+          Cdf <- sum(Cdf)
+        } 
+      } else {
+        Cdf <- sum(Cstruc)
+      } # end if(is.null(Cstruc))
+    } else {
+      Cdf <- 0
+      if(const[1]==1L) {
+        Bdf <- Bdf + nfac
+      } else {
+        Gdf <- Gdf + nfac
+      }
+    } # end if(is.null(Cfixed))
+    
+    ### GCV criterion
     edf <- c(Adf+Gdf,Bdf,Cdf)
-    pxdim <- ntotal * xdims[2]
+    pxdim <- sum(nx) * xdims[2]
     GCV <- (ssenew/pxdim) / (1 - sum(edf)/pxdim)^2
     
     ### collect results
@@ -199,8 +444,13 @@ parafac2_3way <-
       if(vtol<=ctol){cflag <- 0} else {cflag <- 1}
     }
     names(edf) <- c("A","B","C")
-    pfac <- list(A=list(H=Rknew,G=Gnew),B=Bnew,C=Cnew,Rsq=Rsq,GCV=GCV,
-                 edf=edf,iter=iter,cflag=cflag,const=const)
+    fixed <- c(ifelse(is.null(Gfixed), FALSE, TRUE), ifelse(is.null(Bfixed), FALSE, TRUE), ifelse(is.null(Cfixed), FALSE, TRUE))
+    struc <- c(ifelse(is.null(Gstruc), FALSE, TRUE), ifelse(is.null(Bstruc), FALSE, TRUE), ifelse(is.null(Cstruc), FALSE, TRUE))
+    Ak <- vector("list", xdims[3])
+    for(k in 1:xdims[3]) Ak[[k]] <- Rknew[[k]] %*% Gnew
+    pfac <- list(A=Ak,B=Bnew,C=Cnew,Phi=crossprod(Gnew),SSE=ssenew,Rsq=Rsq,
+                 GCV=GCV,edf=edf,iter=iter,cflag=cflag,const=const,control=control,
+                 fixed=fixed,struc=struc)
     return(pfac)
     
   }

@@ -1,12 +1,12 @@
 indscal <- 
   function(X,nfac,nstart=10,const=NULL,maxit=500,
            type=c("dissimilarity","similarity"),
-           ctol=10^-4,parallel=FALSE,cl=NULL,
+           ctol=1e-4,parallel=FALSE,cl=NULL,
            output=c("best","all")){
     # Individual Differences Scaling (INDSCAL)
     # via alternating least squares (ALS) with optional constraints
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: October 10, 2015
+    # last updated: May 5, 2017
     
     # check 'X' input
     if(is.list(X)){
@@ -77,8 +77,10 @@ indscal <-
       }
       bsg <- sign(colSums(pfac$B^3))
       pfac$B <- pfac$B%*%(diag(nfac)*(bsg))
-      pfac <- c(pfac[2:6],list(const=const,strain=(1-pfac$Rsq)*xcx))
-      pfac$GCV <- NULL
+      pfac <- pfac[-1]
+      pfac$SSE <- sum((X - array(tcrossprod(pfac$B, krprod(pfac$C, pfac$B)), dim=xdim))^2)
+      pfac$GCV <- (pfac$SSE / prod(xdim)) / (1 - sum(pfac$edf)/prod(xdim))^2
+      pfac$const <- const
       class(pfac) <- "indscal"
       return(pfac)
     } else {
@@ -89,8 +91,10 @@ indscal <-
         }
         bsg <- sign(colSums(x$B^3))
         x$B <- x$B%*%(diag(nfac)*(bsg))
-        x <- c(x[2:6],list(const=const,strain=(1-x$Rsq)*xcx))
-        x$GCV <- NULL
+        x <- x[-1]
+        x$SSE <- sum((X - array(tcrossprod(x$B, krprod(x$C, x$B)), dim=xdim))^2)
+        x$GCV <- (x$SSE / prod(xdim)) / (1 - sum(x$edf)/prod(xdim))^2
+        x$const <- const
         class(x) <- "indscal"
         x
       })

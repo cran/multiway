@@ -27,7 +27,7 @@ Rescales factors from a \code{multiway} object.
   Character indicating which mode to rescale.
 }
   \item{newscale}{
-  Desired mean-square for each column of rescaled mode. Can input a scalar or a vector with length equal to the number of factors for the given mode.
+  Desired root mean-square for each column of rescaled mode. Can input a scalar or a vector with length equal to the number of factors for the given mode.
 }
   \item{absorb}{
   Character indicating which mode should absorb the inverse of the rescalings applied to \code{mode} (cannot be equal to \code{mode}).

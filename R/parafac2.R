@@ -1,13 +1,13 @@
 parafac2 <- 
-  function(X,nfac,nstart=10,const=NULL,
+  function(X,nfac,nstart=10,const=NULL,control=NULL,
            Gfixed=NULL,Bfixed=NULL,Cfixed=NULL,Dfixed=NULL,
            Gstart=NULL,Bstart=NULL,Cstart=NULL,Dstart=NULL,
            Gstruc=NULL,Bstruc=NULL,Cstruc=NULL,Dstruc=NULL,
-           maxit=500,ctol=10^-4,parallel=FALSE,cl=NULL,output=c("best","all")){
+           maxit=500,ctol=1e-4,parallel=FALSE,cl=NULL,output=c("best","all")){
     # 3-way or 4-way Parallel Factor Analysis2 (Parafac2)
     # via alternating least squares (ALS) with optional constraints
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: February 4, 2016
+    # last updated: May 16, 2017
     
     # check 'X' input
     if(is.array(X)){
@@ -62,8 +62,27 @@ parafac2 <-
     } else {
       const <- as.integer(const)
       if(length(const)!=lxdim){stop(paste("Input 'const' must be ",lxdim," element vector specifying constraint for each mode"))}
-      if(min(const)<0L | max(const)>2L){stop("'const[j]' must be 0 (unconstrained), 1 (orthogonal), or 2 (non-negative)")}
-      if(const[1]==2L){stop("you cannot apply nonnegativity on Mode A")}
+      if(min(const)<0L | max(const)>6L){stop("'const[j]' must be one of the following: \n0 (unconstrained) \n1 (orthogonal) \n2 (non-negative) \n3 (unimodal) \n4 (monotonic) \n5 (periodic) \n6 (smooth)")}
+      if(any(const[1]==c(2L,3L,4L))){stop("You cannot apply nonnegativity, unimodality, or monotonicity on Mode A.")}
+    }
+    
+    # check 'control' input
+    convars <- list(const=const, df=control$df, degree=control$degree, nonneg=control$nonneg)
+    control <- do.call("const.control", convars)
+    if(any(const[1]==c(5L,6L)) && control$nonneg[1]) warning("Input control$nonneg is not applicable for Mode A.")
+    xdtemp <- xdim
+    xdtemp[1] <- min(sapply(X, function(x) dim(x)[1]))
+    for(j in 1:length(const)){
+      if(const[j] > 2L){
+        if(control$df[j] >= xdtemp[j]) {
+          if(j==1){
+            warning(paste0("Input control$df[",j,"] = ",control$df[j]," >= min(dim(X[[k]])[",j,"]) = ",xdtemp[j],"\nResetting control$df[",j,"] = ",xdtemp[j]-1,"."))
+          } else {
+            warning(paste0("Input control$df[",j,"] = ",control$df[j]," >= dim(X[[k]])[",j,"] = ",xdtemp[j],"\nResetting control$df[",j,"] = ",xdtemp[j]-1,"."))
+          }
+          control$df[j] <- xdtemp[j] - 1
+        }
+      }
     }
     
     # check 'Gfixed' and 'Bfixed' and 'Cfixed' inputs
@@ -129,15 +148,15 @@ parafac2 <-
         nstartlist <- vector("list",nstart)
         nstartlist[1:nstart] <- nfac
         pfaclist <- parLapply(cl=cl,X=nstartlist,fun="parafac2_3way",data=X,xcx=xcx,
-                              const=const,maxit=maxit,ctol=ctol,Gfixed=Gfixed,Bfixed=Bfixed,
-                              Cfixed=Cfixed,Gstart=Gstart,Bstart=Bstart,Cstart=Cstart,
-                              Gstruc=Gstruc,Bstruc=Bstruc,Cstruc=Cstruc)
+                              const=const,control=control,maxit=maxit,ctol=ctol,Gfixed=Gfixed,
+                              Bfixed=Bfixed,Cfixed=Cfixed,Gstart=Gstart,Bstart=Bstart,
+                              Cstart=Cstart,Gstruc=Gstruc,Bstruc=Bstruc,Cstruc=Cstruc)
       } else {
         pfaclist <- vector("list",nstart)
         for(j in 1:nstart){
-          pfaclist[[j]] <- parafac2_3way(data=X,nfac=nfac,xcx=xcx,const=const,maxit=maxit,
-                                         ctol=ctol,Gfixed=Gfixed,Bfixed=Bfixed,Cfixed=Cfixed,
-                                         Gstart=Gstart,Bstart=Bstart,Cstart=Cstart,
+          pfaclist[[j]] <- parafac2_3way(data=X,nfac=nfac,xcx=xcx,const=const,control=control,
+                                         maxit=maxit,ctol=ctol,Gfixed=Gfixed,Bfixed=Bfixed,
+                                         Cfixed=Cfixed,Gstart=Gstart,Bstart=Bstart,Cstart=Cstart,
                                          Gstruc=Gstruc,Bstruc=Bstruc,Cstruc=Cstruc)
         }
       } # end if(parallel)
@@ -163,14 +182,14 @@ parafac2 <-
         nstartlist <- vector("list",nstart)
         nstartlist[1:nstart] <- nfac
         pfaclist <- parLapply(cl=cl,X=nstartlist,fun="parafac2_4way",data=X,xcx=xcx,
-                              const=const,maxit=maxit,ctol=ctol,Gfixed=Gfixed,
+                              const=const,control=control,maxit=maxit,ctol=ctol,Gfixed=Gfixed,
                               Bfixed=Bfixed,Cfixed=Cfixed,Dfixed=Dfixed,
                               Gstart=Gstart,Bstart=Bstart,Cstart=Cstart,Dstart=Dstart,
                               Gstruc=Gstruc,Bstruc=Bstruc,Cstruc=Cstruc,Dstruc=Dstruc)
       } else {
         pfaclist <- vector("list",nstart)
         for(j in 1:nstart){
-          pfaclist[[j]] <- parafac2_4way(data=X,nfac=nfac,xcx=xcx,const=const,maxit=maxit,ctol=ctol,
+          pfaclist[[j]] <- parafac2_4way(data=X,nfac=nfac,xcx=xcx,const=const,control=control,maxit=maxit,ctol=ctol,
                                          Gfixed=Gfixed,Bfixed=Bfixed,Cfixed=Cfixed,Dfixed=Dfixed,
                                          Gstart=Gstart,Bstart=Bstart,Cstart=Cstart,Dstart=Dstart,
                                          Gstruc=Gstruc,Bstruc=Bstruc,Cstruc=Cstruc,Dstruc=Dstruc)
@@ -180,8 +199,14 @@ parafac2 <-
     
     # output results
     if(output[1]=="best"){
-      widx <- which.max(sapply(pfaclist,function(x) x$Rsq))
-      pfac <- pfaclist[[widx]]
+      cflag <- sapply(pfaclist,function(x) x$cflag)
+      Rsq <- sapply(pfaclist,function(x) x$Rsq)
+      cidx <- which(cflag==2)
+      nbad <- length(cidx)
+      if(nbad > 0 & nbad < nstart){
+        Rsq[cidx] <- 0
+      }
+      pfac <- pfaclist[[which.max(Rsq)]]
       class(pfac) <- "parafac2"
       return(pfac)
     } else {

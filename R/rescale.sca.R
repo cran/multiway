@@ -2,7 +2,7 @@ rescale.sca <-
   function(x, mode="B", newscale=1, ...){
     # Rescales Weights of fit SCA nmodel
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: August 19, 2015    
+    # last updated: May 16, 2017
     
     # check mode
     mode <- mode[1]
@@ -28,7 +28,6 @@ rescale.sca <-
       if(nfac==1L) { Smat <- matrix(1/svec) } else { Smat <- diag(1/svec) }
       x$C <- x$C %*% Smat
       x$D <- lapply(x$D, function(x) x %*% Smat)
-      if(x$type=="sca-ecp") { x$Phi <- Smat %*% x$Phi %*% Smat }
       return(x)
       
     } else {
@@ -38,7 +37,6 @@ rescale.sca <-
       if(nfac==1L) { Smat <- matrix(svec) } else { Smat <- diag(svec) }
       x$C <- x$C %*% Smat
       x$D <- lapply(x$D, function(x) x %*% Smat)
-      if(x$type=="sca-ecp") { x$Phi <- Smat %*% x$Phi %*% Smat }
       if(nfac==1L) { Smat <- matrix(1/svec) } else { Smat <- diag(1/svec) }
       x$B <- x$B %*% Smat
       return(x)

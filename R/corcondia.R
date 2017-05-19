@@ -2,7 +2,7 @@ corcondia <-
   function(X,object,divisor=c("nfac","core")){
     # Core Consistency Diagnostic
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: October 12, 2015
+    # last updated: May 16, 2017
     
     clob <- class(object)
     if(clob=="parafac"){
@@ -42,14 +42,14 @@ corcondia <-
         rm(Xlist)
       }
       
-      nfac <- ncol(object$A$G)
-      Ai <- mpinv(object$A$G)
+      nfac <- ncol(object$B)
+      Ai <- smpower(object$Phi, power=-0.5)
       Bi <- mpinv(object$B)
       Ci <- mpinv(object$C)
       imat <- kronecker(Ci,kronecker(Bi,Ai))
       
       if(is.null(object$D)){
-        for(k in 1:nrow(object$C)) X[[k]] <- crossprod(object$A$H[[k]], X[[k]])
+        for(k in 1:nrow(object$C)) X[[k]] <- crossprod(object$A[[k]] %*% Ai, X[[k]])
         g <- imat %*% unlist(X)
         G <- array(g, dim=rep(nfac,3))
         super <- array(0, dim=rep(nfac,3))
@@ -57,7 +57,7 @@ corcondia <-
       } else {
         Di <- mpinv(object$D)
         imat <- kronecker(Di,imat)
-        for(k in 1:nrow(object$D)) X[[k]] <- crossprod(object$A$H[[k]], matrix(X[[k]],nrow=dim(X[[k]])[1]))
+        for(k in 1:nrow(object$D)) X[[k]] <- crossprod(object$A[[k]] %*% Ai, matrix(X[[k]],nrow=dim(X[[k]])[1]))
         g <- imat %*% unlist(X)
         G <- array(g, dim=rep(nfac,4))
         super <- array(0, dim=rep(nfac,4))

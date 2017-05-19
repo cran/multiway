@@ -1,12 +1,19 @@
 exportPattern("^[[:alpha:]]+")
 
 import(parallel)
+import(quadprog)
 
 S3method(fitted, indscal)
 S3method(fitted, parafac)
 S3method(fitted, parafac2)
 S3method(fitted, sca)
 S3method(fitted, tucker)
+
+S3method(print, indscal)
+S3method(print, parafac)
+S3method(print, parafac2)
+S3method(print, sca)
+S3method(print, tucker)
 
 S3method(reorder, indscal)
 S3method(reorder, parafac)
@@ -26,4 +33,4 @@ S3method(resign, parafac2)
 S3method(resign, sca)
 S3method(resign, tucker)
 
-importFrom("stats", "cor", "promax", "reorder", "rnorm", "runif", "varimax")
+importFrom("stats", "cor", "promax", "quantile", "reorder", "rnorm", "runif", "varimax")

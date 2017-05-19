@@ -21,11 +21,11 @@ subject to \code{crossprod(A[[l]]) = Phi} \cr
 Weight matrices are estimated using an alternating least squares algorithm with optional constraints.
 }
 \usage{
-parafac2(X,nfac,nstart=10,const=NULL,
+parafac2(X,nfac,nstart=10,const=NULL,control=NULL,
          Gfixed=NULL,Bfixed=NULL,Cfixed=NULL,Dfixed=NULL,
          Gstart=NULL,Bstart=NULL,Cstart=NULL,Dstart=NULL,
          Gstruc=NULL,Bstruc=NULL,Cstruc=NULL,Dstruc=NULL,
-         maxit=500,ctol=10^-4,parallel=FALSE,
+         maxit=500,ctol=1e-4,parallel=FALSE,
          cl=NULL,output=c("best","all"))
 }
 \arguments{
@@ -39,12 +39,23 @@ parafac2(X,nfac,nstart=10,const=NULL,
   Number of random starts.
 }
   \item{const}{
-  Constraints for each mode. See Examples.
-} 
+  Constraints for each mode. Vector of length 3 or 4 with entries:
+  0 = unconstrained (default),
+  1 = orthogonal,
+  2 = non-negative,
+  3 = unimodal,
+  4 = monotonic,
+  5 = periodic,
+  6 = smooth.
+  Use \code{control} argument to adjust options for constraints 3-6.
+  Note: constraints 2-4 cannot be applied on Mode A.
+}
+\item{control}{
+  List of parameters controlling options for constraints 3-6. This is passed to \code{\link{const.control}}, which describes the available options.
+}
   \item{Gfixed}{
   Fixed Mode A crossproducts (\code{crossprod(Gfixed)=Phi}). Only used to fit model with fixed Phi matrix.
 }
-  
   \item{Bfixed}{
   Fixed Mode B weights. Only used to fit model with fixed Mode B weights.
 }
@@ -96,16 +107,21 @@ parafac2(X,nfac,nstart=10,const=NULL,
 }
 \value{
 If \code{output="best"}, returns an object of class \code{"parafac2"} with the following elements:
-\item{A}{List with 2 elements (see Note).}
+\item{A}{List of Mode A weight matrices.}
 \item{B}{Mode B weight matrix.}
 \item{C}{Mode C weight matrix.}
 \item{D}{Mode D weight matrix.}
+\item{Phi}{Mode A crossproduct matrix.}
+\item{SSE}{Sum of Squared Errors.}
 \item{Rsq}{R-squared value.}
 \item{GCV}{Generalized Cross-Validation.}
 \item{edf}{Effective degrees of freedom.}
 \item{iter}{Number of iterations.}
 \item{cflag}{Convergence flag.}
-\item{const}{Same as input \code{const}.}
+\item{const}{See argument \code{const}.}
+\item{control}{See argument \code{control}.}
+\item{fixed}{Logical vector indicating whether 'fixed' weights were used for each mode.}
+\item{struc}{Logical vector indicating whether 'struc' constraints were used for each mode.}
 
 Otherwise returns a list of length \code{nstart} where each element is an object of class \code{"parafac2"}.
 }
@@ -116,19 +132,21 @@ Harshman, R. A. (1972). PARAFAC2: Mathematical and technical notes. \emph{UCLA W
 
 Helwig, N. E. (2013). The special sign indeterminacy of the direct-fitting Parafac2 model: Some implications, cautions, and recommendations, for Simultaneous Component Analysis. \emph{Psychometrika, 78}, 725-739.
 
+Helwig, N. E. (2016). Estimating latent trends in multivariate longitudinal data via Parafac2 with functional and structural constraints. \emph{Biometrical Journal}.
+
 Kiers, H. A. L., ten Berge, J. M. F., & Bro, R. (1999). PARAFAC2-part I: A direct-fitting algorithm for the PARAFAC2 model. \emph{Journal of Chemometrics, 13}, 275-294.
+
+Ramsay, J. O. (1988). Monotone regression splines in action. \emph{Statistical Science, 3}, 425-441.
 }
 \author{
 Nathaniel E. Helwig <helwig@umn.edu>
 }
 \note{
-Output: \code{A$H} is list of orthogonal matrices, and \code{A$G} is \code{R}-by-\code{R} matrix such that \code{crossprod(A$G) = Phi}. For 3-way case \code{A$H[[k]]\%*\%A$G} gives Mode A weights for \code{k}-th level of Mode C. For 4-way case \code{A$H[[l]]\%*\%A$G} gives Mode A weights for \code{l}-th level of Mode D. 
+Default use is 10 random strarts (\code{nstart=10}) with 500 maximum iterations of the ALS algorithm for each start (\code{maxit=500}) using a convergence tolerance of 1e-4 (\code{ctol=1e-4}). The algorithm is determined to have converged once the change in R^2 is less than or equal to \code{ctol}.
 
-Default use is 10 random strarts (\code{nstart=10}) with 500 maximum iterations of the ALS algorithm for each start (\code{maxit=500}) using a convergence tolerance of 10^-4 (\code{ctol=10^-4}). The algorithm is determined to have converged once the change in R^2 is less than or equal to \code{ctol}.
+Output \code{cflag} gives convergence information: \code{cflag=0} if ALS algorithm converged normally, \code{cflag=1} if maximum iteration limit was reached before convergence, and \code{cflag=2} if ALS algorithm terminated abnormally due to a problem with the constraints.
 
-Input \code{const} should be a three or four element integer vector. Set \code{const[j]=0} for unconstrained update in j-th mode weight matrix, \code{const[j]=1} for orthogonal update in j-th mode weight matrix, or \code{const[j]=2} for non-negative update in j-th mode. Default is unconstrained update for all modes. Note: non-negativity in Mode A is not allowed.
-
-Output \code{cflag} gives convergence information: \code{cflag=0} if ALS algorithm converged normally, \code{cflag=1} if maximum iteration limit was reached before convergence, and \code{cflag=2} if ALS algorithm terminated abnormally due to problem with non-negativity constraints.
+Constraints 3 (unimodality) and 4 (monotonicity) are implemented using I-splines, and constraints 5 (periodicity) and 6 (smoothness) are implemented using M-splines (see Ramsay, 1988).
 }
 \section{Warnings }{
 The ALS algorithm can perform poorly if the number of factors \code{nfac} is set too large.
@@ -136,6 +154,8 @@ The ALS algorithm can perform poorly if the number of factors \code{nfac} is set
 Non-negativity constraints can be sensitive to local optima. 
 
 Non-negativity constraints can result in slower performance.
+
+Structure constraints for override constraints in \code{const} input.
 }
 
 \examples{
@@ -160,14 +180,15 @@ X <- mapply("+",Xmat,Emat)
 
 # fit Parafac2 model (unconstrained)
 pfac <- parafac2(X,nfac=nf,nstart=1)
-pfac$Rsq
+pfac
 
 # check solution
 Xhat <- fitted(pfac)
 sse <- sumsq(mapply("-",Xmat,Xhat))
 sse/(sum(nk)*mydim[2])
-crossprod(pfac$A$H[[1]])
-crossprod(pfac$A$G)
+crossprod(pfac$A[[1]])
+crossprod(pfac$A[[2]])
+pfac$Phi
 
 # reorder and resign factors
 pfac$B[1:4,]
@@ -198,12 +219,14 @@ mydim <- c(NA,10,20,5)
 nf <- 3
 nk <- sample(c(50,100,200),mydim[4],replace=TRUE)
 Gmat <- matrix(rnorm(nf^2),nf,nf)
-Bmat <- matrix(runif(mydim[2]*nf),mydim[2],nf)
-Cmat <- matrix(runif(mydim[3]*nf),mydim[3],nf)
-Dmat <- matrix(runif(mydim[4]*nf),mydim[4],nf)
+Bmat <- scale(matrix(rnorm(mydim[2]*nf),mydim[2],nf), center=FALSE)
+cseq <- seq(-3, 3, length=mydim[3])
+Cmat <- cbind(pnorm(cseq), pgamma(cseq+3.1, shape=1, rate=1)*(3/4), pt(cseq-2, df=4)*2)
+Dmat <- scale(matrix(runif(mydim[4]*nf)*2,mydim[4],nf), center=FALSE)
 Xmat <- Emat <- Hmat <- vector("list",mydim[4])
 for(k in 1:mydim[4]){
-  Hmat[[k]] <- svd(matrix(rnorm(nk[k]*nf),nk[k],nf),nv=0)$u
+  aseq <- seq(-3,3,length=nk[k])
+  Hmat[[k]] <- svd(cbind(sin(aseq), sin(abs(aseq)), exp(-aseq^2)),nv=0)$u
   Xmat[[k]] <- array(tcrossprod(Hmat[[k]]\%*\%Gmat\%*\%diag(Dmat[k,]),
                              krprod(Cmat,Bmat)),dim=c(nk[k],mydim[2],mydim[3]))
   Emat[[k]] <- array(rnorm(nk[k]*mydim[2]*mydim[3]),dim=c(nk[k],mydim[2],mydim[3]))
@@ -211,16 +234,17 @@ for(k in 1:mydim[4]){
 Emat <- nscale(Emat,0,sumsq(Xmat))   # SNR=1
 X <- mapply("+",Xmat,Emat)
 
-# fit Parafac2 model (unconstrained)
-pfac <- parafac2(X,nfac=nf,nstart=1)
-pfac$Rsq
+# fit Parafac model (smooth A, unconstrained B, monotonic C, non-negative D)
+pfac <- parafac2(X,nfac=nf,nstart=1,const=c(6,0,4,2))
+pfac
 
 # check solution
 Xhat <- fitted(pfac)
 sse <- sumsq(mapply("-",Xmat,Xhat))
 sse/(sum(nk)*mydim[2]*mydim[3])
-crossprod(pfac$A$H[[1]])
-crossprod(pfac$A$G)
+crossprod(pfac$A[[1]])
+crossprod(pfac$A[[2]])
+pfac$Phi
 
 
 \dontrun{
@@ -247,14 +271,14 @@ X <- mapply("+",Xmat,Emat)
 # fit Parafac2 model (10 random starts -- sequential computation)
 set.seed(1)
 system.time({pfac <- parafac2(X,nfac=nf)})
-pfac$Rsq
+pfac
 
 # fit Parafac2 model (10 random starts -- parallel computation)
 set.seed(1)
 cl <- makeCluster(detectCores())
 ce <- clusterEvalQ(cl,library(multiway))
 system.time({pfac <- parafac2(X,nfac=nf,parallel=TRUE,cl=cl)})
-pfac$Rsq
+pfac
 stopCluster(cl)
 }
 

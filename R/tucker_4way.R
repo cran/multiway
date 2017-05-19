@@ -1,10 +1,10 @@
 tucker_4way <-
   function(data,nfac,xcx=sumsq(data),maxit=500,
-           ctol=10^-4,Afixed=NULL,Bfixed=NULL,Cfixed=NULL,
+           ctol=1e-4,Afixed=NULL,Bfixed=NULL,Cfixed=NULL,
            Dfixed=NULL,Bstart=NULL,Cstart=NULL,Dstart=NULL){
     # 4-way Tucker model
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: October 14, 2015
+    # last updated: May 4, 2017
     
     ### initialize reshaped data matrices
     xdims <- dim(data)
@@ -82,7 +82,7 @@ tucker_4way <-
     }
     names(edf) <- c("A","B","C","D","G")
     tuck <- list(A=Anew,B=Bnew,C=Cnew,D=Dnew,G=array(Ga,dim=nfac),
-                 Rsq=Rsq,GCV=GCV,edf=edf,iter=iter,cflag=cflag)
+                 SSE=ssenew,Rsq=Rsq,GCV=GCV,edf=edf,iter=iter,cflag=cflag)
     return(tuck)
     
   }

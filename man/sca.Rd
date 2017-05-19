@@ -23,7 +23,7 @@ where \code{Phi[[k]]} is specific to the \code{k}-th level of Mode C, \code{Phi}
 sca(X,nfac,nstart=10,maxit=500,
     type=c("sca-p","sca-pf2","sca-ind","sca-ecp"),
     rotation=c("none","varimax","promax"),
-    ctol=10^-4,parallel=FALSE,cl=NULL)
+    ctol=1e-4,parallel=FALSE,cl=NULL)
 }
 \arguments{
   \item{X}{
@@ -59,6 +59,7 @@ sca(X,nfac,nstart=10,maxit=500,
 \item{B}{Mode B weight matrix.}
 \item{C}{Mode C weight matrix.}
 \item{Phi}{Mode A common crossproduct matrix (if \code{type!="sca-p"}).}
+\item{SSE}{Sum of Squared Errors.}
 \item{Rsq}{R-squared value.}
 \item{GCV}{Generalized Cross-Validation.}
 \item{edf}{Effective degrees of freedom.}
@@ -76,7 +77,7 @@ Timmerman, M. E., & Kiers, H. A. L. (2003). Four simultaneous component models f
 Nathaniel E. Helwig <helwig@umn.edu>
 }
 \note{
-Default use is 10 random strarts (\code{nstart=10}) with 500 maximum iterations of the ALS algorithm for each start (\code{maxit=500}) using a convergence tolerance of 10^-4 (\code{ctol=10^-4}). The algorithm is determined to have converged once the change in R^2 is less than or equal to \code{ctol}.
+Default use is 10 random strarts (\code{nstart=10}) with 500 maximum iterations of the ALS algorithm for each start (\code{maxit=500}) using a convergence tolerance of 1e-4 (\code{ctol=1e-4}). The algorithm is determined to have converged once the change in R^2 is less than or equal to \code{ctol}.
 
 Output \code{cflag} gives convergence information: \code{cflag=0} if ALS algorithm converged normally, \code{cflag=1} if maximum iteration limit was reached before convergence, and \code{cflag=2} if ALS algorithm terminated abnormally due to problem with non-negativity constraints.
 }
@@ -119,7 +120,7 @@ X <- mapply("+",Xmat,Emat)
 
 # fit SCA-P model (no rotation)
 scamod <- sca(X,nfac=nf,nstart=1)
-scamod$Rsq
+scamod
 
 # check solution
 crossprod(scamod$D[[1]] \%*\% diag(scamod$C[1,]^-1) ) / nk[1]
@@ -170,7 +171,7 @@ X <- mapply("+",Xmat,Emat)
 
 # fit SCA-PF2 model
 scamod <- sca(X,nfac=nf,nstart=1,type="sca-pf2")
-scamod$Rsq
+scamod
 
 # check solution
 scamod$Phi
@@ -222,7 +223,7 @@ X <- mapply("+",Xmat,Emat)
 
 # fit SCA-IND model
 scamod <- sca(X,nfac=nf,nstart=1,type="sca-ind")
-scamod$Rsq
+scamod
 
 # check solution
 scamod$Phi
@@ -274,7 +275,7 @@ X <- mapply("+",Xmat,Emat)
 
 # fit SCA-ECP model
 scamod <- sca(X,nfac=nf,nstart=1,type="sca-ecp")
-scamod$Rsq
+scamod
 
 # check solution
 scamod$Phi
@@ -329,40 +330,40 @@ X <- mapply("+",Xmat,Emat)
 # fit SCA-PF2 model (10 random starts -- sequential computation)
 set.seed(1)
 system.time({scamod <- sca(X,nfac=nf,type="sca-pf2")})
-scamod$Rsq
+scamod
 
 # fit SCA-PF2 model (10 random starts -- parallel computation)
 set.seed(1)
 cl <- makeCluster(detectCores())
 ce <- clusterEvalQ(cl,library(multiway))
 system.time({scamod <- sca(X,nfac=nf,type="sca-pf2",parallel=TRUE,cl=cl)})
-scamod$Rsq
+scamod
 stopCluster(cl)
 
 # fit SCA-IND model (10 random starts -- sequential computation)
 set.seed(1)
 system.time({scamod <- sca(X,nfac=nf,type="sca-ind")})
-scamod$Rsq
+scamod
 
 # fit SCA-IND model (10 random starts -- parallel computation)
 set.seed(1)
 cl <- makeCluster(detectCores())
 ce <- clusterEvalQ(cl,library(multiway))
 system.time({scamod <- sca(X,nfac=nf,type="sca-ind",parallel=TRUE,cl=cl)})
-scamod$Rsq
+scamod
 stopCluster(cl)
 
 # fit SCA-ECP model (10 random starts -- sequential computation)
 set.seed(1)
 system.time({scamod <- sca(X,nfac=nf,type="sca-ecp")})
-scamod$Rsq
+scamod
 
 # fit SCA-ECP model (10 random starts -- parallel computation)
 set.seed(1)
 cl <- makeCluster(detectCores())
 ce <- clusterEvalQ(cl,library(multiway))
 system.time({scamod <- sca(X,nfac=nf,type="sca-ecp",parallel=TRUE,cl=cl)})
-scamod$Rsq
+scamod
 stopCluster(cl)
 }
 

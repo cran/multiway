@@ -2,12 +2,12 @@ tucker <-
   function(X,nfac,nstart=10,Afixed=NULL,
            Bfixed=NULL,Cfixed=NULL,Dfixed=NULL,
            Bstart=NULL,Cstart=NULL,Dstart=NULL,
-           maxit=500,ctol=10^-4,parallel=FALSE,
+           maxit=500,ctol=1e-4,parallel=FALSE,
            cl=NULL,output=c("best","all")){
     # 3-way or 4-way Tucker model
     # via alternating least squares (ALS) with optional constraints
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: February 4, 2016
+    # last updated: May 16, 2017
     
     # check 'X' input
     xdim <- dim(X)
@@ -22,6 +22,11 @@ tucker <-
     if(any(nfac<1L)){stop("Input 'nfac' must contain positive integers")}
     nstart <- as.integer(nstart[1])
     if(nstart<1L){stop("Input 'nstart' must be positive integer")}
+    
+    # check feasibility of 'nfac' input
+    checks <- rep(FALSE, length(xdim))
+    for(j in 1:length(xdim)) checks[j] <- nfac[j] > prod(nfac[-j])
+    if(any(checks)) stop("Input 'nfac' is infeasible:  need nfac[j] <= prod(nfac[-j]) for all j.")
     
     # check 'maxit' and 'ctol' inputs
     maxit <- as.integer(maxit[1])

@@ -19,11 +19,11 @@ where \code{D = matrix(d,L,R)} are the Mode D (fourth mode) weights, \code{E = a
 Weight matrices are estimated using an alternating least squares algorithm with optional constraints.
 }
 \usage{
-parafac(X,nfac,nstart=10,const=NULL,
+parafac(X,nfac,nstart=10,const=NULL,control=NULL,
         Bfixed=NULL,Cfixed=NULL,Dfixed=NULL,
         Bstart=NULL,Cstart=NULL,Dstart=NULL,
         Bstruc=NULL,Cstruc=NULL,Dstruc=NULL,
-        maxit=500,ctol=10^-4,parallel=FALSE,
+        maxit=500,ctol=1e-4,parallel=FALSE,
         cl=NULL,output=c("best","all"))
 }
 \arguments{
@@ -37,7 +37,18 @@ parafac(X,nfac,nstart=10,const=NULL,
   Number of random starts.
 }
   \item{const}{
-  Constraints for each mode. See Examples.
+  Constraints for each mode. Vector of length 3 or 4 with entries:
+  0 = unconstrained (default),
+  1 = orthogonal,
+  2 = non-negative,
+  3 = unimodal,
+  4 = monotonic,
+  5 = periodic,
+  6 = smooth.
+  Use \code{control} argument to adjust options for constraints 3-6.
+}
+\item{control}{
+  List of parameters controlling options for constraints 3-6. This is passed to \code{\link{const.control}}, which describes the available options.
 }
   \item{Bfixed}{
   Fixed Mode B weights. Only used to fit model with fixed Mode B weights.
@@ -88,12 +99,16 @@ If \code{output="best"}, returns an object of class \code{"parafac"} with the fo
 \item{B}{Mode B weight matrix.}
 \item{C}{Mode C weight matrix.}
 \item{D}{Mode D weight matrix.}
+\item{SSE}{Sum of Squared Errors.}
 \item{Rsq}{R-squared value.}
 \item{GCV}{Generalized Cross-Validation.}
 \item{edf}{Effective degrees of freedom.}
 \item{iter}{Number of iterations.}
 \item{cflag}{Convergence flag.}
-\item{const}{Same as input \code{const}.}
+\item{const}{See argument \code{const}.}
+\item{control}{See argument \code{control}.}
+\item{fixed}{Logical vector indicating whether 'fixed' weights were used for each mode.}
+\item{struc}{Logical vector indicating whether 'struc' constraints were used for each mode.}
 
 Otherwise returns a list of length \code{nstart} where each element is an object of class \code{"parafac"}.
 }
@@ -103,16 +118,20 @@ Bro, R., & De Jong, S. (1997). A fast non-negativity-constrained least squares a
 Harshman, R. A. (1970). Foundations of the PARAFAC procedure: Models and conditions for an "explanatory" multimodal factor analysis. \emph{UCLA Working Papers in Phonetics, 16}, 1-84.
 
 Harshman, R. A., & Lundy, M. E. (1994). PARAFAC: Parallel factor analysis. \emph{Computational Statistics and Data Analysis, 18}, 39-72.
+
+Helwig, N. E. (2016). Estimating latent trends in multivariate longitudinal data via Parafac2 with functional and structural constraints. \emph{Biometrical Journal}.
+
+Ramsay, J. O. (1988). Monotone regression splines in action. \emph{Statistical Science, 3}, 425-441.
 }
 \author{
 Nathaniel E. Helwig <helwig@umn.edu>
 }
 \note{
-Default use is 10 random strarts (\code{nstart=10}) with 500 maximum iterations of the ALS algorithm for each start (\code{maxit=500}) using a convergence tolerance of 10^-4 (\code{ctol=10^-4}). The algorithm is determined to have converged once the change in R^2 is less than or equal to \code{ctol}.
+Default use is 10 random strarts (\code{nstart=10}) with 500 maximum iterations of the ALS algorithm for each start (\code{maxit=500}) using a convergence tolerance of 1e-4 (\code{ctol=1e-4}). The algorithm is determined to have converged once the change in R^2 is less than or equal to \code{ctol}.
 
-Input \code{const} should be a three or four element integer vector. Set \code{const[j]=0} for unconstrained update in j-th mode weight matrix, \code{const[j]=1} for orthogonal update in j-th mode weight matrix, or \code{const[j]=2} for non-negative update in j-th mode. Default is unconstrained update for all modes.
+Output \code{cflag} gives convergence information: \code{cflag=0} if ALS algorithm converged normally, \code{cflag=1} if maximum iteration limit was reached before convergence, and \code{cflag=2} if ALS algorithm terminated abnormally due to a problem with the constraints.
 
-Output \code{cflag} gives convergence information: \code{cflag=0} if ALS algorithm converged normally, \code{cflag=1} if maximum iteration limit was reached before convergence, and \code{cflag=2} if ALS algorithm terminated abnormally due to problem with non-negativity constraints.
+Constraints 3 (unimodality) and 4 (monotonicity) are implemented using I-splines, and constraints 5 (periodicity) and 6 (smoothness) are implemented using M-splines (see Ramsay, 1988).
 }
 \section{Warnings }{
 The ALS algorithm can perform poorly if the number of factors \code{nfac} is set too large.
@@ -141,7 +160,11 @@ X <- Xmat + Emat
 
 # fit Parafac model (unconstrained)
 pfac <- parafac(X,nfac=nf,nstart=1)
-pfac$Rsq
+pfac
+
+# fit Parafac model (non-negativity on Modes B and C)
+pfacNN <- parafac(X,nfac=nf,nstart=1,const=c(0,2,2))
+pfacNN
 
 # check solution
 Xhat <- fitted(pfac)
@@ -172,7 +195,9 @@ sum((Xmat-Xhat)^2)/prod(mydim)
 set.seed(4)
 mydim <- c(30,10,8,10)
 nf <- 4
-Amat <- matrix(rnorm(mydim[1]*nf),mydim[1],nf)
+aseq <- seq(-3,3,length=mydim[1])
+Amat <- cbind(dnorm(aseq), dchisq(aseq+3.1, df=3),
+              dt(aseq-2, df=4), dgamma(aseq+3.1, shape=3, rate=1))
 Bmat <- svd(matrix(runif(mydim[2]*nf),mydim[2],nf))$u
 Cmat <- matrix(runif(mydim[3]*nf),mydim[3],nf)
 Dmat <- matrix(runif(mydim[4]*nf),mydim[4],nf)
@@ -181,13 +206,14 @@ Emat <- array(rnorm(prod(mydim)),dim=mydim)
 Emat <- nscale(Emat,0,sumsq(Xmat))   # SNR=1
 X <- Xmat + Emat
 
-# fit Parafac model (unconstrained A, orthogonal B, non-negative C, unconstrained D)
-pfac <- parafac(X,nfac=nf,nstart=1,const=c(0,1,2,0))
-pfac$Rsq
+# fit Parafac model (unimodal A, orthogonal B, non-negative C, non-negative D)
+pfac <- parafac(X,nfac=nf,nstart=1,const=c(3,1,2,2))
+pfac
 
 # check solution
 Xhat <- fitted(pfac)
 sum((Xmat-Xhat)^2)/prod(mydim)
+congru(Amat, pfac$A)
 crossprod(pfac$B)
 pfac$C
 
@@ -211,14 +237,14 @@ X <- Xmat + Emat
 # fit Parafac model (10 random starts -- sequential computation)
 set.seed(1)
 system.time({pfac <- parafac(X,nfac=nf)})
-pfac$Rsq
+pfac
 
 # fit Parafac model (10 random starts -- parallel computation)
 set.seed(1)
 cl <- makeCluster(detectCores())
 ce <- clusterEvalQ(cl,library(multiway))
 system.time({pfac <- parafac(X,nfac=nf,parallel=TRUE,cl=cl)})
-pfac$Rsq
+pfac
 stopCluster(cl)
 }
 

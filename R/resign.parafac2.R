@@ -2,7 +2,7 @@ resign.parafac2 <-
   function(x, mode="A", newsign=1, absorb="C", method="pearson", ...){
     # Resigns Weights of fit Parafac2 model
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: August 19, 2015    
+    # last updated: May 16, 2017
     
     # check mode and absorb and method
     mode <- mode[1]
@@ -24,7 +24,7 @@ resign.parafac2 <-
       nmat <- ifelse(is.null(x$D),nrow(x$C),nrow(x$D))
       if(length(newsign)!=nmat) stop(paste("Input 'newsign' must be a list of length",nmat,"where each element contains a vector of covariates for resigning Mode A."))
       signlen <- sapply(newsign, function(x) length(c(x)))
-      if(!identical(signlen, sapply(x$A$H, nrow))) stop("Incorrect length for an element of 'newsign'. Need length(newsign[[k]]) = nrow(x$A$H[[k]]) for all k.")
+      if(!identical(signlen, sapply(x$A, nrow))) stop("Incorrect length for an element of 'newsign'. Need length(newsign[[k]]) = nrow(x$A[[k]]) for all k.")
     } else {
       newsign <- sign(newsign)
       if(length(newsign)!=nfac) newsign <- rep(newsign[1],nfac)
@@ -37,17 +37,20 @@ resign.parafac2 <-
         
         ksign <- rep(0,nmat)
         for(k in 1:nmat){
-          ksign[k] <- sign( cor( (x$A$H[[k]] %*% x$A$G[,1L]), c(newsign[[k]]), method=method ) )
-          x$A$H[[k]] <- ksign[k] * x$A$H[[k]]
+          ksign[k] <- sign( cor( (x$A[[k]][,1L]), c(newsign[[k]]), method=method ) )
+          x$A[[k]] <- ksign[k] * x$A[[k]]
         }
         if(is.null(x$D)) { x$C <- diag(ksign) %*% x$C } else { x$D <- diag(ksign) %*% x$D }
         
       } else {
         
-        Asign <- sign(colMeans(x$A$G^3))
+        Asign <- rep(0, nfac)
+        for(k in 1:length(x$A)) Asign <- Asign + colMeans(x$A[[k]]^3)
+        Asign <- sign(Asign)
         svec <- newsign*Asign
         if(nfac==1L) { Smat <- matrix(svec) } else { Smat <- diag(svec) }
-        x$A$G <- x$A$G %*% Smat
+        for(k in 1:length(x$A)) x$A[[k]] <- x$A[[k]] %*% Smat
+        x$Phi <- Smat %*% x$Phi %*% Smat
         if(absorb=="B") {
           x$B <- x$B %*% Smat
         } else if(absorb=="C"){
@@ -66,7 +69,8 @@ resign.parafac2 <-
       if(nfac==1L) { Smat <- matrix(svec) } else { Smat <- diag(svec) }
       x$B <- x$B %*% Smat
       if(absorb=="A") {
-        x$A$G <- x$A$G %*% Smat
+        for(k in 1:length(x$A)) x$A[[k]] <- x$A[[k]] %*% Smat
+        x$Phi <- Smat %*% x$Phi %*% Smat
       } else if(absorb=="C"){
         x$C <- x$C %*% Smat
       } else {
@@ -81,7 +85,8 @@ resign.parafac2 <-
       if(nfac==1L) { Smat <- matrix(svec) } else { Smat <- diag(svec) }
       x$C <- x$C %*% Smat
       if(absorb=="A") {
-        x$A$G <- x$A$G %*% Smat
+        for(k in 1:length(x$A)) x$A[[k]] <- x$A[[k]] %*% Smat
+        x$Phi <- Smat %*% x$Phi %*% Smat
       } else if(absorb=="B"){
         x$B <- x$B %*% Smat
       } else {
@@ -96,7 +101,8 @@ resign.parafac2 <-
       if(nfac==1L) { Smat <- matrix(svec) } else { Smat <- diag(svec) }
       x$D <- x$D %*% Smat
       if(absorb=="A") {
-        x$A$G <- x$A$G %*% Smat
+        for(k in 1:length(x$A)) x$A[[k]] <- x$A[[k]] %*% Smat
+        x$Phi <- Smat %*% x$Phi %*% Smat
       } else if(absorb=="B"){
         x$B <- x$B %*% Smat
       } else {

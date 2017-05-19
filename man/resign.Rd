@@ -43,7 +43,7 @@ Resigns factors from a \code{multiway} object.
   Same as input.
 }
 \details{
-	If \code{x} is of class "parafac2" and \code{mode="A"}, the input \code{newsign} can be a list where each element contains a covariate vector for resigning Mode A. You need \code{length(newsign[[k]]) = nrow(x$A$H[[k]])} for all \code{k} when \code{newsign} is a list. In this case, the resigning is implemented according to the sign of \code{cor(newsign[[k]], x$A$H[[k]]\%*\%x$A$G[,1], method)}. See Helwig (2013) for details.
+	If \code{x} is of class "parafac2" and \code{mode="A"}, the input \code{newsign} can be a list where each element contains a covariate vector for resigning Mode A. You need \code{length(newsign[[k]]) = nrow(x$A[[k]])} for all \code{k} when \code{newsign} is a list. In this case, the resigning is implemented according to the sign of \code{cor(newsign[[k]], x$A[[k]][,1], method)}. See Helwig (2013) for details.
   
   See \code{\link{indscal}}, \code{\link{parafac}}, \code{\link{parafac2}}, \code{\link{sca}}, and \code{\link{tucker}} for more details.
 }

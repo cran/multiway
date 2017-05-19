@@ -2,7 +2,7 @@ rescale.parafac2 <-
   function(x, mode="A", newscale=1, absorb="C", ...){
     # Rescales Weights of fit Parafac2 model
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: August 19, 2015    
+    # last updated: May 16, 2017
     
     # check mode and absorb
     mode <- mode[1]
@@ -24,10 +24,11 @@ rescale.parafac2 <-
     # rescale factors
     if(mode=="A"){
       
-      Ascale <- sqrt(colSums(x$A$G^2))
+      Ascale <- sqrt(diag(x$Phi) / mean(sapply(x$A,nrow)))
       svec <- newscale/Ascale
       if(nfac==1L) { Smat <- matrix(svec) } else { Smat <- diag(svec) }
-      x$A$G <- x$A$G %*% Smat
+      for(k in 1:length(x$A)) x$A[[k]] <- x$A[[k]] %*% Smat
+      x$Phi <- Smat %*% x$Phi %*% Smat
       if(nfac==1L) { Smat <- matrix(1/svec) } else { Smat <- diag(1/svec) }
       if(absorb=="B") {
         x$B <- x$B %*% Smat
@@ -46,7 +47,8 @@ rescale.parafac2 <-
       x$B <- x$B %*% Smat
       if(nfac==1L) { Smat <- matrix(1/svec) } else { Smat <- diag(1/svec) }
       if(absorb=="A") {
-        x$A$G <- x$A$G %*% Smat
+        for(k in 1:length(x$A)) x$A[[k]] <- x$A[[k]] %*% Smat
+        x$Phi <- Smat %*% x$Phi %*% Smat
       } else if(absorb=="C"){
         x$C <- x$C %*% Smat
       } else {
@@ -62,7 +64,8 @@ rescale.parafac2 <-
       x$C <- x$C %*% Smat
       if(nfac==1L) { Smat <- matrix(1/svec) } else { Smat <- diag(1/svec) }
       if(absorb=="A") {
-        x$A$G <- x$A$G %*% Smat
+        for(k in 1:length(x$A)) x$A[[k]] <- x$A[[k]] %*% Smat
+        x$Phi <- Smat %*% x$Phi %*% Smat
       } else if(absorb=="B"){
         x$B <- x$B %*% Smat
       } else {
@@ -78,7 +81,8 @@ rescale.parafac2 <-
       x$D <- x$D %*% Smat
       if(nfac==1L) { Smat <- matrix(1/svec) } else { Smat <- diag(1/svec) }
       if(absorb=="A") {
-        x$A$G <- x$A$G %*% Smat
+        for(k in 1:length(x$A)) x$A[[k]] <- x$A[[k]] %*% Smat
+        x$Phi <- Smat %*% x$Phi %*% Smat
       } else if(absorb=="B"){
         x$B <- x$B %*% Smat
       } else {
