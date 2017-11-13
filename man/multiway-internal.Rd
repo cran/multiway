@@ -12,12 +12,18 @@
 \alias{IsplineBasis}
 \alias{MsplineBasis}
 \alias{parafac_3way}
+\alias{parafac_3wayna}
 \alias{parafac_4way}
+\alias{parafac_4wayna}
 \alias{parafac2_3way}
+\alias{parafac2_3wayna}
 \alias{parafac2_4way}
+\alias{parafac2_4wayna}
 \alias{rfunc}
 \alias{tucker_3way}
+\alias{tucker_3wayna}
 \alias{tucker_4way}
+\alias{tucker_4wayna}
 
 \title{Internal Multi-Way Functions}
 \description{

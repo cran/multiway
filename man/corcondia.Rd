@@ -4,7 +4,7 @@
 Core Consistency Diagnostic
 }
 \description{
-Calculates Bro and Kiers's core consistency diagnostic (CORCONDIA) for a fit \code{\link{parafac}}  or \code{\link{parafac2}} model. For Parafac2, the diagnostic is calculated after transforming the data by \code{pfac$A[[k]] \%*\% smpower(pfac$Phi, -0.5)}.
+Calculates Bro and Kiers's core consistency diagnostic (CORCONDIA) for a fit \code{\link{parafac}}  or \code{\link{parafac2}} model. For Parafac2, the diagnostic is calculated after transforming the data.
 }
 \usage{
 corcondia(X, object, divisor=c("nfac","core"))

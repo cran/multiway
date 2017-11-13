@@ -1,12 +1,12 @@
-parafac2_3way <- 
-  function(data,nfac,xcx=sumsq(data),const=rep(0L,3),
+parafac2_3wayna <- 
+  function(data,nfac,naid=NULL,const=rep(0L,3),
            maxit=500,ctol=1e-4,Gfixed=NULL,Bfixed=NULL,
            Cfixed=NULL,Gstart=NULL,Bstart=NULL,Cstart=NULL,
            Gstruc=NULL,Bstruc=NULL,Cstruc=NULL,
            control=const.control(const)){
     # 3-way Parallel Factor Analysis 2 (Parafac2)
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: September 5, 2017
+    # last updated: November 9, 2017
     
     ### initialize Khatri-Rao product matrices
     xdims <- rep(NA,3)
@@ -15,6 +15,15 @@ parafac2_3way <-
     if(is.null(Cfixed)){BkrA <- matrix(0,nfac*xdims[2],nfac)}
     if(is.null(Bfixed)){CkrA <- matrix(0,nfac*xdims[3],nfac)}
     CkrB <- matrix(0,xdims[2]*xdims[3],nfac)
+    
+    ### initialize missing data
+    if(is.null(naid)) naid <- lapply(data, function(x) which(is.na(x)))
+    nmiss <- sapply(naid, length)
+    for(k in 1:xdims[3]){
+      if(nmiss[k] > 0) data[[k]][naid[[k]]] <- rnorm(nmiss[k])
+    }
+    xcx <- sumsq(data)
+    Xhat <- vector("list", xdims[3])
     
     ### initialize stuff for Mode A update
     Rknew <- vector("list",xdims[3])
@@ -332,7 +341,8 @@ parafac2_3way <-
       ## Step 4: check for convergence
       ssenew <- 0
       for(kk in 1:xdims[3]){
-        ssenew <- ssenew + sum((data[[kk]]-tcrossprod(Rknew[[kk]]%*%Gnew%*%(diag(nfac)*Cnew[kk,]),Bnew))^2)
+        Xhat[[kk]] <- tcrossprod(Rknew[[kk]]%*%Gnew%*%(diag(nfac)*Cnew[kk,]), Bnew)
+        ssenew <- ssenew + sum((data[[kk]]-Xhat[[kk]])^2)
       }
       #vtol <- (sseold-ssenew)/sseold
       vtol <- (sseold - ssenew) / xcx
@@ -342,7 +352,17 @@ parafac2_3way <-
       sseold <- ssenew
       iter <- iter + 1
       
+      # impute missing data
+      for(k in 1:xdims[3]){
+        if(nmiss[k] > 0) data[[k]][naid[[k]]] <- Xhat[[k]][naid[[k]]]
+      }
+      xcx <- sumsq(data)
+      
     }  # end while(vtol>ctol && iter<maxit)
+    
+    ### update SSE
+    ssenew <- 0
+    for(kk in 1:xdims[3]) ssenew <- ssenew + sum((data[[kk]]-Xhat[[kk]])^2)
     
     ### scale and order solution
     if(is.null(Gfixed) & is.null(Bfixed) & is.null(Cfixed)){

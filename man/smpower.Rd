@@ -7,7 +7,7 @@ Symmetric Matrix Power
 Raise symmetric matrix to specified power. Default calculates symmetric square root.
 }
 \usage{
-smpower(X,power=0.5,tol=.Machine$double.eps)
+smpower(X, power = 0.5, tol = NULL)
 }
 \arguments{
   \item{X}{
@@ -20,6 +20,9 @@ smpower(X,power=0.5,tol=.Machine$double.eps)
   Stability tolerance for eigenvalues.
 }
 
+}
+\note{
+	Default tolerance is \code{tol = max(dim(X)) * .Machine$double.eps}.
 }
 \value{
 	Returns \code{X} raised to specified power.

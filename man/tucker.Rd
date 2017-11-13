@@ -20,15 +20,15 @@ Weight matrices are estimated using an alternating least squares algorithm.
 
 }
 \usage{
-tucker(X,nfac,nstart=10,Afixed=NULL,
-       Bfixed=NULL,Cfixed=NULL,Dfixed=NULL,
-       Bstart=NULL,Cstart=NULL,Dstart=NULL,
-       maxit=500,ctol=1e-4,parallel=FALSE,
-       cl=NULL,output=c("best","all"))
+tucker(X, nfac, nstart = 10, Afixed = NULL,
+       Bfixed = NULL, Cfixed = NULL, Dfixed = NULL,
+       Bstart = NULL, Cstart = NULL, Dstart = NULL,
+       maxit = 500, ctol = 1e-4, parallel = FALSE, cl = NULL, 
+       output = c("best", "all"), verbose = FALSE)
 }
 \arguments{
   \item{X}{
-  Three-way data array with \code{dim=c(I,J,K)} or four-way data array with \code{dim=c(I,J,K,L)}.
+  Three-way data array with \code{dim=c(I,J,K)} or four-way data array with \code{dim=c(I,J,K,L)}. Missing data are allowed (see Note).
 }
   \item{nfac}{
   Number of factors in each mode.
@@ -72,6 +72,9 @@ tucker(X,nfac,nstart=10,Afixed=NULL,
   \item{output}{
   Output the best solution (default) or output all \code{nstart} solutions.
 }
+  \item{verbose}{
+  Logical indicating if extra information on progress should be reported. Ignored if \code{parallel=TRUE}.
+}
 }
 \value{
 If \code{output="best"}, returns an object of class \code{"tucker"} with the following elements:
@@ -101,6 +104,8 @@ Nathaniel E. Helwig <helwig@umn.edu>
 Default use is 10 random strarts (\code{nstart=10}) with 500 maximum iterations of the ALS algorithm for each start (\code{maxit=500}) using a convergence tolerance of 1e-4 (\code{ctol=1e-4}). The algorithm is determined to have converged once the change in R^2 is less than or equal to \code{ctol}.
 
 Output \code{cflag} gives convergence information: \code{cflag=0} if ALS algorithm converged normally, and \code{cflag=1} if maximum iteration limit was reached before convergence.
+
+Missing data should be specified as \code{NA} values in the input \code{X}. The missing data are randomly initialized and then iteratively imputed as a part of the ALS algorithm.
 }
 \section{Warnings }{
 The ALS algorithm can perform poorly if the number of factors \code{nfac} is set too large.

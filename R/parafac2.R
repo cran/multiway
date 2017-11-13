@@ -1,20 +1,21 @@
 parafac2 <- 
-  function(X,nfac,nstart=10,const=NULL,control=NULL,
-           Gfixed=NULL,Bfixed=NULL,Cfixed=NULL,Dfixed=NULL,
-           Gstart=NULL,Bstart=NULL,Cstart=NULL,Dstart=NULL,
-           Gstruc=NULL,Bstruc=NULL,Cstruc=NULL,Dstruc=NULL,
-           maxit=500,ctol=1e-4,parallel=FALSE,cl=NULL,output=c("best","all")){
+  function(X, nfac, nstart = 10, const = NULL, control = NULL,
+           Gfixed = NULL, Bfixed = NULL, Cfixed = NULL, Dfixed = NULL,
+           Gstart = NULL, Bstart = NULL, Cstart = NULL, Dstart = NULL,
+           Gstruc = NULL, Bstruc = NULL, Cstruc = NULL, Dstruc = NULL,
+           maxit = 500, ctol = 1e-4, parallel = FALSE, cl = NULL,
+           output = c("best", "all"), verbose = FALSE){
     # 3-way or 4-way Parallel Factor Analysis2 (Parafac2)
     # via alternating least squares (ALS) with optional constraints
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: May 16, 2017
+    # last updated: November 12, 2017
     
     # check 'X' input
     if(is.array(X)){
       xdim <- dim(X)
       lxdim <- length(xdim)
       if(lxdim<3L | lxdim>4L){stop("Input 'X' must be 3-way or 4-way array")}
-      if(any(is.na(X)) | any(is.nan(X)) | any(is.infinite(X))){stop("Input 'X' cannot contain NA, NaN, or Inf values")}
+      if(any(is.nan(X)) | any(is.infinite(X))){stop("Input 'X' cannot contain NaN or Inf values")}
       if(lxdim==3L){
         mylist <- vector("list",xdim[3])
         for(kk in 1:xdim[3]){mylist[[kk]] <- X[,,kk]}
@@ -27,7 +28,7 @@ parafac2 <-
     } else if(is.list(X)){
       d1x <- dim(X[[1]])
       lxdim <- length(d1x) + 1L
-      if( any(sapply(X,function(x) any(any(is.na(x)),any(is.nan(x)),any(is.infinite(x))))) ){stop("Input 'X' cannot contain NA, NaN, or Inf values")}
+      if( any(sapply(X,function(x) any(any(is.nan(x)),any(is.infinite(x))))) ){stop("Input 'X' cannot contain NaN or Inf values")}
       if(lxdim==3L){
         xdim <- rep(NA,3)
         xdim[2] <- d1x[2]
@@ -42,7 +43,13 @@ parafac2 <-
         if(sum((sapply(X,dim)[3,]-xdim[3])^2)>0L){stop("Input 'X' must be list of arrays with same number of slabs.")}
       } else{stop("Input 'X' must be list of 2-way or 3-way arrays.")}
     } else{stop("Input 'X' must be an array or list.")}
-    xcx <- sumsq(X)
+    if(any(sapply(X, function(x) any(is.na(x))))){
+      missingdata <- TRUE
+      naid <- lapply(X, function(x) which(is.na(x)))
+    } else {
+      missingdata <- FALSE
+      xcx <- sumsq(X)
+    }
     
     # check 'nfac' and 'nstart' inputs
     nfac <- as.integer(nfac[1])
@@ -147,18 +154,38 @@ parafac2 <-
       if(parallel){
         nstartlist <- vector("list",nstart)
         nstartlist[1:nstart] <- nfac
-        pfaclist <- parLapply(cl=cl,X=nstartlist,fun="parafac2_3way",data=X,xcx=xcx,
-                              const=const,control=control,maxit=maxit,ctol=ctol,Gfixed=Gfixed,
-                              Bfixed=Bfixed,Cfixed=Cfixed,Gstart=Gstart,Bstart=Bstart,
-                              Cstart=Cstart,Gstruc=Gstruc,Bstruc=Bstruc,Cstruc=Cstruc)
+        if(missingdata){
+          pfaclist <- parLapply(cl=cl,X=nstartlist,fun="parafac2_3wayna",data=X,naid=naid,
+                                const=const,control=control,maxit=maxit,ctol=ctol,Gfixed=Gfixed,
+                                Bfixed=Bfixed,Cfixed=Cfixed,Gstart=Gstart,Bstart=Bstart,
+                                Cstart=Cstart,Gstruc=Gstruc,Bstruc=Bstruc,Cstruc=Cstruc)
+        } else {
+          pfaclist <- parLapply(cl=cl,X=nstartlist,fun="parafac2_3way",data=X,xcx=xcx,
+                                const=const,control=control,maxit=maxit,ctol=ctol,Gfixed=Gfixed,
+                                Bfixed=Bfixed,Cfixed=Cfixed,Gstart=Gstart,Bstart=Bstart,
+                                Cstart=Cstart,Gstruc=Gstruc,Bstruc=Bstruc,Cstruc=Cstruc)
+        } # end if(missingdata)
       } else {
         pfaclist <- vector("list",nstart)
-        for(j in 1:nstart){
-          pfaclist[[j]] <- parafac2_3way(data=X,nfac=nfac,xcx=xcx,const=const,control=control,
-                                         maxit=maxit,ctol=ctol,Gfixed=Gfixed,Bfixed=Bfixed,
-                                         Cfixed=Cfixed,Gstart=Gstart,Bstart=Bstart,Cstart=Cstart,
-                                         Gstruc=Gstruc,Bstruc=Bstruc,Cstruc=Cstruc)
-        }
+        if(verbose) pbar <- txtProgressBar(min = 0, max = nstart, style = 3)
+        if(missingdata){
+          for(j in 1:nstart){
+            pfaclist[[j]] <- parafac2_3wayna(data=X,nfac=nfac,naid=naid,const=const,control=control,
+                                             maxit=maxit,ctol=ctol,Gfixed=Gfixed,Bfixed=Bfixed,
+                                             Cfixed=Cfixed,Gstart=Gstart,Bstart=Bstart,Cstart=Cstart,
+                                             Gstruc=Gstruc,Bstruc=Bstruc,Cstruc=Cstruc)
+            if(verbose) setTxtProgressBar(pbar, j)
+          }
+        } else {
+          for(j in 1:nstart){
+            pfaclist[[j]] <- parafac2_3way(data=X,nfac=nfac,xcx=xcx,const=const,control=control,
+                                           maxit=maxit,ctol=ctol,Gfixed=Gfixed,Bfixed=Bfixed,
+                                           Cfixed=Cfixed,Gstart=Gstart,Bstart=Bstart,Cstart=Cstart,
+                                           Gstruc=Gstruc,Bstruc=Bstruc,Cstruc=Cstruc)
+            if(verbose) setTxtProgressBar(pbar, j)
+          }
+        } # end if(missingdata)
+        if(verbose) close(pbar)
       } # end if(parallel)
     } else if(lxdim==4L){
       # check 'Dfixed' and 'Dstart' inputs
@@ -181,32 +208,56 @@ parafac2 <-
       if(parallel){
         nstartlist <- vector("list",nstart)
         nstartlist[1:nstart] <- nfac
-        pfaclist <- parLapply(cl=cl,X=nstartlist,fun="parafac2_4way",data=X,xcx=xcx,
-                              const=const,control=control,maxit=maxit,ctol=ctol,Gfixed=Gfixed,
-                              Bfixed=Bfixed,Cfixed=Cfixed,Dfixed=Dfixed,
-                              Gstart=Gstart,Bstart=Bstart,Cstart=Cstart,Dstart=Dstart,
-                              Gstruc=Gstruc,Bstruc=Bstruc,Cstruc=Cstruc,Dstruc=Dstruc)
+        if(missingdata){
+          pfaclist <- parLapply(cl=cl,X=nstartlist,fun="parafac2_4wayna",data=X,naid=naid,
+                                const=const,control=control,maxit=maxit,ctol=ctol,Gfixed=Gfixed,
+                                Bfixed=Bfixed,Cfixed=Cfixed,Dfixed=Dfixed,
+                                Gstart=Gstart,Bstart=Bstart,Cstart=Cstart,Dstart=Dstart,
+                                Gstruc=Gstruc,Bstruc=Bstruc,Cstruc=Cstruc,Dstruc=Dstruc)
+        } else {
+          pfaclist <- parLapply(cl=cl,X=nstartlist,fun="parafac2_4way",data=X,xcx=xcx,
+                                const=const,control=control,maxit=maxit,ctol=ctol,Gfixed=Gfixed,
+                                Bfixed=Bfixed,Cfixed=Cfixed,Dfixed=Dfixed,
+                                Gstart=Gstart,Bstart=Bstart,Cstart=Cstart,Dstart=Dstart,
+                                Gstruc=Gstruc,Bstruc=Bstruc,Cstruc=Cstruc,Dstruc=Dstruc)
+        } # end if(missingdata)
       } else {
         pfaclist <- vector("list",nstart)
-        for(j in 1:nstart){
-          pfaclist[[j]] <- parafac2_4way(data=X,nfac=nfac,xcx=xcx,const=const,control=control,maxit=maxit,ctol=ctol,
-                                         Gfixed=Gfixed,Bfixed=Bfixed,Cfixed=Cfixed,Dfixed=Dfixed,
-                                         Gstart=Gstart,Bstart=Bstart,Cstart=Cstart,Dstart=Dstart,
-                                         Gstruc=Gstruc,Bstruc=Bstruc,Cstruc=Cstruc,Dstruc=Dstruc)
-        }
+        if(verbose) pbar <- txtProgressBar(min = 0, max = nstart, style = 3)
+        if(missingdata){
+          for(j in 1:nstart){
+            pfaclist[[j]] <- parafac2_4wayna(data=X,nfac=nfac,naid=naid,const=const,control=control,maxit=maxit,ctol=ctol,
+                                             Gfixed=Gfixed,Bfixed=Bfixed,Cfixed=Cfixed,Dfixed=Dfixed,
+                                             Gstart=Gstart,Bstart=Bstart,Cstart=Cstart,Dstart=Dstart,
+                                             Gstruc=Gstruc,Bstruc=Bstruc,Cstruc=Cstruc,Dstruc=Dstruc)
+            if(verbose) setTxtProgressBar(pbar, j)
+          }
+        } else {
+          for(j in 1:nstart){
+            pfaclist[[j]] <- parafac2_4way(data=X,nfac=nfac,xcx=xcx,const=const,control=control,maxit=maxit,ctol=ctol,
+                                           Gfixed=Gfixed,Bfixed=Bfixed,Cfixed=Cfixed,Dfixed=Dfixed,
+                                           Gstart=Gstart,Bstart=Bstart,Cstart=Cstart,Dstart=Dstart,
+                                           Gstruc=Gstruc,Bstruc=Bstruc,Cstruc=Cstruc,Dstruc=Dstruc)
+            if(verbose) setTxtProgressBar(pbar, j)
+          }
+        } # end if(missingdata)
+        if(verbose) close(pbar)
       } # end if(parallel)
     } # end if(lxdim==3L) 
     
     # output results
     if(output[1]=="best"){
       cflag <- sapply(pfaclist,function(x) x$cflag)
-      Rsq <- sapply(pfaclist,function(x) x$Rsq)
+      SSE <- sapply(pfaclist,function(x) x$SSE)
+      #Rsq <- sapply(pfaclist,function(x) x$Rsq)
       cidx <- which(cflag==2)
       nbad <- length(cidx)
       if(nbad > 0 & nbad < nstart){
-        Rsq[cidx] <- 0
+        #Rsq[cidx] <- 0
+        SSE[cidx] <- max(SSE) + 1
       }
-      pfac <- pfaclist[[which.max(Rsq)]]
+      #pfac <- pfaclist[[which.max(Rsq)]]
+      pfac <- pfaclist[[which.min(SSE)]]
       class(pfac) <- "parafac2"
       return(pfac)
     } else {

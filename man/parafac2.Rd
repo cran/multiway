@@ -21,16 +21,16 @@ subject to \code{crossprod(A[[l]]) = Phi} \cr
 Weight matrices are estimated using an alternating least squares algorithm with optional constraints.
 }
 \usage{
-parafac2(X,nfac,nstart=10,const=NULL,control=NULL,
-         Gfixed=NULL,Bfixed=NULL,Cfixed=NULL,Dfixed=NULL,
-         Gstart=NULL,Bstart=NULL,Cstart=NULL,Dstart=NULL,
-         Gstruc=NULL,Bstruc=NULL,Cstruc=NULL,Dstruc=NULL,
-         maxit=500,ctol=1e-4,parallel=FALSE,
-         cl=NULL,output=c("best","all"))
+parafac2(X, nfac, nstart = 10, const = NULL, control = NULL,
+         Gfixed = NULL, Bfixed = NULL, Cfixed = NULL, Dfixed = NULL,
+         Gstart = NULL, Bstart = NULL, Cstart = NULL, Dstart = NULL,
+         Gstruc = NULL, Bstruc = NULL, Cstruc = NULL, Dstruc = NULL,
+         maxit = 500, ctol = 1e-4, parallel = FALSE, cl = NULL,
+         output = c("best", "all"), verbose = FALSE)
 }
 \arguments{
   \item{X}{
-  For 3-way Parafac2: list of length \code{K} where \code{k}-th element is \code{I[k]}-by-\code{J} matrix or three-way data array with \code{dim=c(I,J,K)}. For 4-way Parafac2: list of length \code{L} where \code{l}-th element is \code{I[l]}-by-\code{J}-by-\code{K} array or four-way data array with \code{dim=c(I,J,K,L)}.
+  For 3-way Parafac2: list of length \code{K} where \code{k}-th element is \code{I[k]}-by-\code{J} matrix or three-way data array with \code{dim=c(I,J,K)}. For 4-way Parafac2: list of length \code{L} where \code{l}-th element is \code{I[l]}-by-\code{J}-by-\code{K} array or four-way data array with \code{dim=c(I,J,K,L)}. Missing data are allowed (see Note).
 }
   \item{nfac}{
   Number of factors.
@@ -104,6 +104,9 @@ parafac2(X,nfac,nstart=10,const=NULL,control=NULL,
   \item{output}{
   Output the best solution (default) or output all \code{nstart} solutions.
 }
+  \item{verbose}{
+  Logical indicating if extra information on progress should be reported. Ignored if \code{parallel=TRUE}.
+}
 }
 \value{
 If \code{output="best"}, returns an object of class \code{"parafac2"} with the following elements:
@@ -132,7 +135,7 @@ Harshman, R. A. (1972). PARAFAC2: Mathematical and technical notes. \emph{UCLA W
 
 Helwig, N. E. (2013). The special sign indeterminacy of the direct-fitting Parafac2 model: Some implications, cautions, and recommendations, for Simultaneous Component Analysis. \emph{Psychometrika, 78}, 725-739.
 
-Helwig, N. E. (2016). Estimating latent trends in multivariate longitudinal data via Parafac2 with functional and structural constraints. \emph{Biometrical Journal}.
+Helwig, N. E. (2017). Estimating latent trends in multivariate longitudinal data via Parafac2 with functional and structural constraints. \emph{Biometrical Journal, 59}(4), 783-803.
 
 Kiers, H. A. L., ten Berge, J. M. F., & Bro, R. (1999). PARAFAC2-part I: A direct-fitting algorithm for the PARAFAC2 model. \emph{Journal of Chemometrics, 13}, 275-294.
 
@@ -147,6 +150,8 @@ Default use is 10 random strarts (\code{nstart=10}) with 500 maximum iterations 
 Output \code{cflag} gives convergence information: \code{cflag=0} if ALS algorithm converged normally, \code{cflag=1} if maximum iteration limit was reached before convergence, and \code{cflag=2} if ALS algorithm terminated abnormally due to a problem with the constraints.
 
 Constraints 3 (unimodality) and 4 (monotonicity) are implemented using I-splines, and constraints 5 (periodicity) and 6 (smoothness) are implemented using M-splines (see Ramsay, 1988).
+
+Missing data should be specified as \code{NA} values in the input \code{X}. The missing data are randomly initialized and then iteratively imputed as a part of the ALS algorithm.
 }
 \section{Warnings }{
 The ALS algorithm can perform poorly if the number of factors \code{nfac} is set too large.

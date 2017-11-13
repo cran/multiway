@@ -33,7 +33,7 @@ Haughwout, S. P., LaVallee, R. A., & Castle, I-J. P. (2015).
    National, State, and Regional Trends, 1977-2013. Bethesda, MD: NIAAA,
    Alcohol Epidemiologic Data System.
    
-Helwig, N.E. (2016). Estimating latent trends in multivariate longitudinal data via Parafac2 with functional and structural constraints. \emph{Biometrical Journal}.
+Helwig, N. E. (2017). Estimating latent trends in multivariate longitudinal data via Parafac2 with functional and structural constraints. \emph{Biometrical Journal, 59}(4), 783-803.
 
 Nephew, T. M., Yi, H., Williams, G. D., Stinson, F. S., & Dufour, M.C., (2004). 
    U.S. Alcohol Epidemiologic Data Reference Manual, Vol. 1, 4th ed. 

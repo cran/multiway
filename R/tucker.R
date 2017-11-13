@@ -1,20 +1,26 @@
 tucker <- 
-  function(X,nfac,nstart=10,Afixed=NULL,
-           Bfixed=NULL,Cfixed=NULL,Dfixed=NULL,
-           Bstart=NULL,Cstart=NULL,Dstart=NULL,
-           maxit=500,ctol=1e-4,parallel=FALSE,
-           cl=NULL,output=c("best","all")){
+  function(X, nfac, nstart = 10, Afixed = NULL,
+           Bfixed = NULL, Cfixed = NULL, Dfixed = NULL,
+           Bstart = NULL, Cstart = NULL, Dstart = NULL,
+           maxit = 500, ctol = 1e-4, parallel = FALSE, cl = NULL, 
+           output = c("best", "all"), verbose = FALSE){
     # 3-way or 4-way Tucker model
     # via alternating least squares (ALS) with optional constraints
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: May 16, 2017
+    # last updated: November 12, 2017
     
     # check 'X' input
     xdim <- dim(X)
     lxdim <- length(xdim)
     if(lxdim<3L | lxdim>4L){stop("Input 'X' must be 3-way or 4-way array")}
-    if(any(is.na(X)) | any(is.nan(X)) | any(is.infinite(X))){stop("Input 'X' cannot contain NA, NaN, or Inf values")}
-    xcx <- sumsq(X)
+    if(any(is.nan(X)) | any(is.infinite(X))){stop("Input 'X' cannot contain NaN or Inf values")}
+    if(any(is.na(X))){
+      missingdata <- TRUE
+      naid <- which(is.na(X))
+    } else {
+      missingdata <- FALSE
+      xcx <- sumsq(X)
+    }
     
     # check 'nfac' and 'nstart' inputs
     nfac <- as.integer(nfac)
@@ -73,16 +79,34 @@ tucker <-
       if(parallel){
         nstartlist <- vector("list",nstart)
         nstartlist <- lapply(nstartlist,function(x) {x <- nfac})
-        tucklist <- parLapply(cl=cl,X=nstartlist,fun="tucker_3way",data=X,xcx=xcx,
-                              maxit=maxit,ctol=ctol,Afixed=Afixed,Bfixed=Bfixed,Cfixed=Cfixed,
-                              Bstart=Bstart,Cstart=Cstart)
+        if(missingdata){
+          tucklist <- parLapply(cl=cl,X=nstartlist,fun="tucker_3wayna",data=X,naid=naid,
+                                maxit=maxit,ctol=ctol,Afixed=Afixed,Bfixed=Bfixed,Cfixed=Cfixed,
+                                Bstart=Bstart,Cstart=Cstart)
+        } else {
+          tucklist <- parLapply(cl=cl,X=nstartlist,fun="tucker_3way",data=X,xcx=xcx,
+                                maxit=maxit,ctol=ctol,Afixed=Afixed,Bfixed=Bfixed,Cfixed=Cfixed,
+                                Bstart=Bstart,Cstart=Cstart)
+        } # end if(missingdata)
       } else {
         tucklist <- vector("list",nstart)
-        for(j in 1:nstart){
-          tucklist[[j]] <- tucker_3way(data=X,nfac=nfac,xcx=xcx,maxit=maxit,ctol=ctol,
-                                       Afixed=Afixed,Bfixed=Bfixed,Cfixed=Cfixed,
-                                       Bstart=Bstart,Cstart=Cstart)
-        }
+        if(verbose) pbar <- txtProgressBar(min = 0, max = nstart, style = 3)
+        if(missingdata){
+          for(j in 1:nstart){
+            tucklist[[j]] <- tucker_3wayna(data=X,nfac=nfac,naid=naid,maxit=maxit,ctol=ctol,
+                                           Afixed=Afixed,Bfixed=Bfixed,Cfixed=Cfixed,
+                                           Bstart=Bstart,Cstart=Cstart)
+            if(verbose) setTxtProgressBar(pbar, j)
+          }
+        } else {
+          for(j in 1:nstart){
+            tucklist[[j]] <- tucker_3way(data=X,nfac=nfac,xcx=xcx,maxit=maxit,ctol=ctol,
+                                         Afixed=Afixed,Bfixed=Bfixed,Cfixed=Cfixed,
+                                         Bstart=Bstart,Cstart=Cstart)
+            if(verbose) setTxtProgressBar(pbar, j)
+          }
+        } # end if(missingdata)
+        if(verbose) close(pbar)
       } # end if(parallel)
     } else if(lxdim==4L){
       # check 'Dfixed' and 'Dstart' inputs
@@ -99,16 +123,34 @@ tucker <-
       if(parallel){
         nstartlist <- vector("list",nstart)
         nstartlist <- lapply(nstartlist,function(x) {x <- nfac})
-        tucklist <- parLapply(cl=cl,X=nstartlist,fun="tucker_4way",data=X,xcx=xcx,
-                              maxit=maxit,ctol=ctol,Afixed=Afixed,Bfixed=Bfixed,Cfixed=Cfixed,
-                              Dfixed=Dfixed,Bstart=Bstart,Cstart=Cstart,Dstart=Dstart)
+        if(missingdata){
+          tucklist <- parLapply(cl=cl,X=nstartlist,fun="tucker_4wayna",data=X,naid=naid,
+                                maxit=maxit,ctol=ctol,Afixed=Afixed,Bfixed=Bfixed,Cfixed=Cfixed,
+                                Dfixed=Dfixed,Bstart=Bstart,Cstart=Cstart,Dstart=Dstart)
+        } else {
+          tucklist <- parLapply(cl=cl,X=nstartlist,fun="tucker_4way",data=X,xcx=xcx,
+                                maxit=maxit,ctol=ctol,Afixed=Afixed,Bfixed=Bfixed,Cfixed=Cfixed,
+                                Dfixed=Dfixed,Bstart=Bstart,Cstart=Cstart,Dstart=Dstart)
+        } # end if(missingdata)
       } else {
         tucklist <- vector("list",nstart)
-        for(j in 1:nstart){
-          tucklist[[j]] <- tucker_4way(data=X,nfac=nfac,xcx=xcx,maxit=maxit,ctol=ctol,
-                                       Afixed=Afixed,Bfixed=Bfixed,Cfixed=Cfixed,Dfixed=Dfixed,
-                                       Bstart=Bstart,Cstart=Cstart,Dstart=Dstart)
-        }
+        if(verbose) pbar <- txtProgressBar(min = 0, max = nstart, style = 3)
+        if(missingdata){
+          for(j in 1:nstart){
+            tucklist[[j]] <- tucker_4wayna(data=X,nfac=nfac,naid=naid,maxit=maxit,ctol=ctol,
+                                           Afixed=Afixed,Bfixed=Bfixed,Cfixed=Cfixed,Dfixed=Dfixed,
+                                           Bstart=Bstart,Cstart=Cstart,Dstart=Dstart)
+            if(verbose) setTxtProgressBar(pbar, j)
+          }
+        } else {
+          for(j in 1:nstart){
+            tucklist[[j]] <- tucker_4way(data=X,nfac=nfac,xcx=xcx,maxit=maxit,ctol=ctol,
+                                         Afixed=Afixed,Bfixed=Bfixed,Cfixed=Cfixed,Dfixed=Dfixed,
+                                         Bstart=Bstart,Cstart=Cstart,Dstart=Dstart)
+            if(verbose) setTxtProgressBar(pbar, j)
+          }
+        } # end if(missingdata)
+        if(verbose) close(pbar)
       } # end if(parallel)
     } # end if(lxdim==3L) 
     

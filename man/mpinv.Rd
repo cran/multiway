@@ -7,7 +7,7 @@ Moore-Penrose Pseudoinverse
 Calculates the Moore-Penrose pseudoinverse of the input matrix using a truncated singular value decomposition.
 }
 \usage{
-mpinv(X, tol=.Machine$double.eps)
+mpinv(X, tol = NULL)
 }
 \arguments{
   \item{X}{
@@ -17,6 +17,9 @@ mpinv(X, tol=.Machine$double.eps)
   Stability tolerance for singular values.
 }
 
+}
+\note{
+	Default tolerance is \code{tol = max(dim(X)) * .Machine$double.eps}.
 }
 \value{
 	Returns pseudoinverse of \code{X}.

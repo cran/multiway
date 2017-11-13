@@ -1,26 +1,23 @@
 corcondia <- 
-  function(X,object,divisor=c("nfac","core")){
+  function(X, object, divisor = c("nfac", "core")){
     # Core Consistency Diagnostic
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: May 16, 2017
+    # last updated: November 12, 2017
     
     clob <- class(object)
     if(clob=="parafac"){
       
       nfac <- ncol(object$A)
       Ai <- mpinv(object$A)
-      Bi <- mpinv(object$B)
-      Ci <- mpinv(object$C)
-      imat <- kronecker(Ci,kronecker(Bi,Ai))
+      imat <- kronecker(mpinv(object$C), mpinv(object$B))
       if(is.null(object$D)){
-        g <- imat %*% c(X)
+        g <- tcrossprod(Ai %*% matrix(X, nrow = nrow(object$A)), imat)
         G <- array(g, dim=rep(nfac,3))
         super <- array(0, dim=rep(nfac,3))
         for(k in 1:nfac) super[k,k,k] <- 1
       } else {
-        Di <- mpinv(object$D)
-        imat <- kronecker(Di,imat)
-        g <- imat %*% c(X)
+        imat <- kronecker(mpinv(object$D), imat)
+        g <- tcrossprod(Ai %*% matrix(X, nrow = nrow(object$A)), imat)
         G <- array(g, dim=rep(nfac,4))
         super <- array(0, dim=rep(nfac,4))
         for(k in 1:nfac) super[k,k,k,k] <- 1
@@ -43,22 +40,18 @@ corcondia <-
       }
       
       nfac <- ncol(object$B)
-      Ai <- smpower(object$Phi, power=-0.5)
-      Bi <- mpinv(object$B)
-      Ci <- mpinv(object$C)
-      imat <- kronecker(Ci,kronecker(Bi,Ai))
-      
+      Ai <- smpower(object$Phi, power = -1)
+      imat <- kronecker(mpinv(object$C), mpinv(object$B))
       if(is.null(object$D)){
-        for(k in 1:nrow(object$C)) X[[k]] <- crossprod(object$A[[k]] %*% Ai, X[[k]])
-        g <- imat %*% unlist(X)
+        for(k in 1:nrow(object$C)) X[[k]] <- crossprod(object$A[[k]], X[[k]])
+        g <- tcrossprod(Ai %*% matrix(unlist(X), nrow = nfac), imat)
         G <- array(g, dim=rep(nfac,3))
         super <- array(0, dim=rep(nfac,3))
         for(k in 1:nfac) super[k,k,k] <- 1
       } else {
-        Di <- mpinv(object$D)
-        imat <- kronecker(Di,imat)
-        for(k in 1:nrow(object$D)) X[[k]] <- crossprod(object$A[[k]] %*% Ai, matrix(X[[k]],nrow=dim(X[[k]])[1]))
-        g <- imat %*% unlist(X)
+        imat <- kronecker(mpinv(object$D), imat)
+        for(k in 1:nrow(object$D)) X[[k]] <- crossprod(object$A[[k]], matrix(X[[k]], nrow = nrow(object$A[[k]])))
+        g <- tcrossprod(Ai %*% matrix(unlist(X), nrow = nfac), imat)
         G <- array(g, dim=rep(nfac,4))
         super <- array(0, dim=rep(nfac,4))
         for(k in 1:nfac) super[k,k,k,k] <- 1

@@ -46,7 +46,7 @@ ncenter(X,mode=1)
 Nathaniel E. Helwig <helwig@umn.edu>
 }
 \note{
-	When entering a list with array elements, each element must (a) be an array (2-way, 3-way, or 4-way), and (b) have the same dimension (i.e, array size).
+	When entering a list with array elements, each element must be an array (2-way, 3-way, or 4-way) that contains the specified \code{mode} to center across.
 }
 
 \examples{

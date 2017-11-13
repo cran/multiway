@@ -1,14 +1,14 @@
 Package: multiway
 Type: Package
 Title: Component Models for Multi-Way Data
-Version: 1.0-3
-Date: 2017-05-17
+Version: 1.0-4
+Date: 2017-11-13
 Author: Nathaniel E. Helwig <helwig@umn.edu>
 Maintainer: Nathaniel E. Helwig <helwig@umn.edu>
 Depends: parallel, quadprog
 Description: Fits multi-way component models via alternating least squares algorithms with optional constraints: orthogonal, non-negative, unimodal, monotonic, periodic, smooth, or structure. Fit models include Individual Differences Scaling, Parallel Factor Analysis (1 and 2), Simultaneous Component Analysis, and Tucker Factor Analysis.
 License: GPL (>= 2)
 NeedsCompilation: no
-Packaged: 2017-05-17 16:28:50 UTC; Nate
+Packaged: 2017-11-13 06:50:05 UTC; Nate
 Repository: CRAN
-Date/Publication: 2017-05-19 06:20:13 UTC
+Date/Publication: 2017-11-13 10:26:26 UTC

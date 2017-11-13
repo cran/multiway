@@ -1,3 +1,38 @@
+Changes from ver 1.0-3 to ver 1.0-4     [Nov-13-2017]
+   1) multiway-package
+	*   Bug fix: parafac2 initialization with nfac = 1
+	*   Missing data now allowed (as NA) and iteratively imputed
+		- parafac, parafac2, and tucker
+	*   Added progress bar option ('verbose' argument)
+		- parafac, parafac2, and tucker
+	*   Expanded functionality of ncenter for list arguments
+	*   Improved stability tolerance (mpinv and smpower)
+	*   Improved internal computations for corcondia
+	*   Improved initializations for parafac2 nesting Mode
+	*   Updated Helwig (2017) reference throughout.
+   2) corcondia
+	*   Improved computation for 'parafac' and 'parafac2' objects
+	*   CCD now calculated more efficiently for large 'nfac'
+   3) mpinv and smpower
+	*   Improved stability tolerance (now depends on data size)
+   4) parafac
+	*   Missing data now allowed (as NA) and iteratively imputed
+	*   Added progress bar option ('verbose' argument)
+	*   Updated reference to Helwig (2017)
+   5) parafac2
+	*   Bug fix: now possible to fit model with nfac = 1
+	*   Improved initializations for nesting mode weights
+	*   Missing data now allowed (as NA) and iteratively imputed
+	*   Added progress bar option ('verbose' argument)
+	*   Updated reference to Helwig (2017)
+   6) tucker
+	*   Missing data now allowed (as NA) and iteratively imputed
+	*   Added progress bar option ('verbose' argument)
+
+
+
+
+
 Changes from ver 1.0-2 to ver 1.0-3     [May-17-2017]
    1) multiway-package
 	*   Bug fix: starting values and non-negativity constraints (parafac and parafac2)
