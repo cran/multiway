@@ -4,26 +4,13 @@
 Simultaneous Component Analysis
 }
 \description{
-Given a list of matrices \code{X[[k]] = matrix(xk,I[k],J)} for \code{k = seq(1,K)}, the SCA model is 
-\tabular{c}{
-X[[k]] = tcrossprod(D[[k]],B) + E[[k]]
-}
-where \code{D[[k]] = matrix(dk,I[k],R)} are the Mode A (first mode) weights for the \code{k}-th level of Mode C (third mode), \code{B = matrix(b,J,R)} are the Mode B (second mode) weights, and \code{E[[k]] = matrix(ek,I[k],J)} is the residual matrix corresponding to \code{k}-th level of Mode C. 
-
-There are four different versions of the SCA model: SCA with invariant pattern (SCA-P), SCA with Parafac2 constraints (SCA-PF2), SCA with INDSCAL constraints (SCA-IND), and SCA with equal average crossproducts (SCA-ECP). These four models differ with respect to the assumed crossproduct structure of the \code{D[[k]]} weights:
-\tabular{rcl}{
-  SCA-P: \tab \tab \code{crossprod(D[[k]])/I[k] = Phi[[k]]} \cr
-  SCA-PF2: \tab \tab \code{crossprod(D[[k]])/I[k] = diag(C[k,])\%*\%Phi\%*\%diag(C[k,])} \cr
-  SCA-IND: \tab \tab \code{crossprod(D[[k]])/I[k] = diag(C[k,]*C[k,])} \cr
-  SCA-ECP: \tab \tab \code{crossprod(D[[k]])/I[k] = Phi} \cr
-  }
-where \code{Phi[[k]]} is specific to the \code{k}-th level of Mode C, \code{Phi} is common to all \code{K} levels of Mode C, and \code{C = matrix(c,K,R)} are the Mode C (third mode) weights. This function estimates the weight matrices \code{D[[k]]} and \code{B} (and \code{C} if applicable) using alternating least squares. 
+Fits Timmerman and Kiers's four Simultaneous Component Analysis (SCA) models to a 3-way data array or a list of 2-way arrays with the same number of columns. 
 }
 \usage{
-sca(X,nfac,nstart=10,maxit=500,
-    type=c("sca-p","sca-pf2","sca-ind","sca-ecp"),
-    rotation=c("none","varimax","promax"),
-    ctol=1e-4,parallel=FALSE,cl=NULL)
+sca(X, nfac, nstart = 10, maxit = 500,
+    type = c("sca-p", "sca-pf2", "sca-ind", "sca-ecp"),
+    rotation = c("none", "varimax", "promax"),
+    ctol = 1e-4, parallel = FALSE, cl = NULL, verbose = TRUE)
 }
 \arguments{
   \item{X}{
@@ -53,6 +40,25 @@ sca(X,nfac,nstart=10,maxit=500,
   \item{cl}{
   Cluster created by \code{\link{makeCluster}}. Only used when \code{parallel=TRUE}.
 }
+  \item{verbose}{
+  If \code{TRUE}, fitting progress is printed via \code{\link{txtProgressBar}}. Ignored if \code{parallel=TRUE}.
+}
+}
+\details{
+Given a list of matrices \code{X[[k]] = matrix(xk,I[k],J)} for \code{k = seq(1,K)}, the SCA model is 
+\tabular{c}{
+X[[k]] = tcrossprod(D[[k]],B) + E[[k]]
+}
+where \code{D[[k]] = matrix(dk,I[k],R)} are the Mode A (first mode) weights for the \code{k}-th level of Mode C (third mode), \code{B = matrix(b,J,R)} are the Mode B (second mode) weights, and \code{E[[k]] = matrix(ek,I[k],J)} is the residual matrix corresponding to \code{k}-th level of Mode C. 
+
+There are four different versions of the SCA model: SCA with invariant pattern (SCA-P), SCA with Parafac2 constraints (SCA-PF2), SCA with INDSCAL constraints (SCA-IND), and SCA with equal average crossproducts (SCA-ECP). These four models differ with respect to the assumed crossproduct structure of the \code{D[[k]]} weights:
+\tabular{rcl}{
+  SCA-P: \tab \tab \code{crossprod(D[[k]])/I[k] = Phi[[k]]} \cr
+  SCA-PF2: \tab \tab \code{crossprod(D[[k]])/I[k] = diag(C[k,])\%*\%Phi\%*\%diag(C[k,])} \cr
+  SCA-IND: \tab \tab \code{crossprod(D[[k]])/I[k] = diag(C[k,]*C[k,])} \cr
+  SCA-ECP: \tab \tab \code{crossprod(D[[k]])/I[k] = Phi} \cr
+  }
+where \code{Phi[[k]]} is specific to the \code{k}-th level of Mode C, \code{Phi} is common to all \code{K} levels of Mode C, and \code{C = matrix(c,K,R)} are the Mode C (third mode) weights. This function estimates the weight matrices \code{D[[k]]} and \code{B} (and \code{C} if applicable) using alternating least squares. 
 }
 \value{
 \item{D}{List of length \code{K} where \code{k}-th element contains \code{D[[k]]}.}
@@ -115,7 +121,7 @@ for(k in 1:mydim[3]){
   Emat[[k]] <- matrix(rnorm(nk[k]*mydim[2]),nk[k],mydim[2])
 }
 rm(Dmat)
-Emat <- nscale(Emat,0,sumsq(Xmat))   # SNR=1
+Emat <- nscale(Emat, 0, ssnew = sumsq(Xmat))   # SNR=1
 X <- mapply("+",Xmat,Emat)
 
 # fit SCA-P model (no rotation)
@@ -166,7 +172,7 @@ for(k in 1:mydim[3]){
   Xmat[[k]] <- tcrossprod(Fmat[[k]]\%*\%Gmat\%*\%diag(Cmat[k,]),Bmat)
   Emat[[k]] <- matrix(rnorm(nk[k]*mydim[2]),nk[k],mydim[2])
 }
-Emat <- nscale(Emat,0,sumsq(Xmat))   # SNR=1
+Emat <- nscale(Emat, 0, ssnew = sumsq(Xmat))   # SNR=1
 X <- mapply("+",Xmat,Emat)
 
 # fit SCA-PF2 model
@@ -218,7 +224,7 @@ for(k in 1:mydim[3]){
   Xmat[[k]] <- tcrossprod(Fmat[[k]]\%*\%Gmat\%*\%diag(Cmat[k,]),Bmat)
   Emat[[k]] <- matrix(rnorm(nk[k]*mydim[2]),nk[k],mydim[2])
 }
-Emat <- nscale(Emat,0,sumsq(Xmat))   # SNR=1
+Emat <- nscale(Emat, 0, ssnew = sumsq(Xmat))   # SNR=1
 X <- mapply("+",Xmat,Emat)
 
 # fit SCA-IND model
@@ -270,7 +276,7 @@ for(k in 1:mydim[3]){
   Xmat[[k]] <- tcrossprod(Fmat[[k]]\%*\%Gmat\%*\%diag(Cmat[k,]),Bmat)
   Emat[[k]] <- matrix(rnorm(nk[k]*mydim[2]),nk[k],mydim[2])
 }
-Emat <- nscale(Emat,0,sumsq(Xmat))   # SNR=1
+Emat <- nscale(Emat, 0, ssnew = sumsq(Xmat))   # SNR=1
 X <- mapply("+",Xmat,Emat)
 
 # fit SCA-ECP model
@@ -324,7 +330,7 @@ for(k in 1:mydim[3]){
   Xmat[[k]] <- tcrossprod(Fmat[[k]]\%*\%Gmat\%*\%diag(Cmat[k,]),Bmat)
   Emat[[k]] <- matrix(rnorm(nk[k]*mydim[2]),nk[k],mydim[2])
 }
-Emat <- nscale(Emat,0,sumsq(Xmat))   # SNR=1
+Emat <- nscale(Emat, 0, ssnew = sumsq(Xmat))   # SNR=1
 X <- mapply("+",Xmat,Emat)
 
 # fit SCA-PF2 model (10 random starts -- sequential computation)
@@ -333,9 +339,9 @@ system.time({scamod <- sca(X,nfac=nf,type="sca-pf2")})
 scamod
 
 # fit SCA-PF2 model (10 random starts -- parallel computation)
-set.seed(1)
 cl <- makeCluster(detectCores())
 ce <- clusterEvalQ(cl,library(multiway))
+clusterSetRNGStream(cl, 1)
 system.time({scamod <- sca(X,nfac=nf,type="sca-pf2",parallel=TRUE,cl=cl)})
 scamod
 stopCluster(cl)
@@ -346,9 +352,9 @@ system.time({scamod <- sca(X,nfac=nf,type="sca-ind")})
 scamod
 
 # fit SCA-IND model (10 random starts -- parallel computation)
-set.seed(1)
 cl <- makeCluster(detectCores())
 ce <- clusterEvalQ(cl,library(multiway))
+clusterSetRNGStream(cl, 1)
 system.time({scamod <- sca(X,nfac=nf,type="sca-ind",parallel=TRUE,cl=cl)})
 scamod
 stopCluster(cl)
@@ -359,12 +365,15 @@ system.time({scamod <- sca(X,nfac=nf,type="sca-ecp")})
 scamod
 
 # fit SCA-ECP model (10 random starts -- parallel computation)
-set.seed(1)
 cl <- makeCluster(detectCores())
 ce <- clusterEvalQ(cl,library(multiway))
+clusterSetRNGStream(cl, 1)
 system.time({scamod <- sca(X,nfac=nf,type="sca-ecp",parallel=TRUE,cl=cl)})
 scamod
 stopCluster(cl)
 }
 
 }
+
+\keyword{ models }% use one of  RShowDoc("KEYWORDS")
+\keyword{ multivariate }% use one of  RShowDoc("KEYWORDS")

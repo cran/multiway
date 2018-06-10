@@ -24,14 +24,14 @@ smpower(X, power = 0.5, tol = NULL)
 \note{
 	Default tolerance is \code{tol = max(dim(X)) * .Machine$double.eps}.
 }
+\details{
+	Basically returns \code{tcrossprod(Y$vec\%*\%diag(Y$val^power),Y$vec)} where \code{Y = eigen(X,symmetric=TRUE)}.
+}
 \value{
 	Returns \code{X} raised to specified power.
 }
 \author{
 Nathaniel E. Helwig <helwig@umn.edu>
-}
-\note{
-	Basically returns \code{tcrossprod(Y$vec\%*\%diag(Y$val^power),Y$vec)} where \code{Y = eigen(X,symmetric=TRUE)}.
 }
 
 \examples{
@@ -44,3 +44,5 @@ Xisqrt <- smpower(X,-0.5)   # inverse square root
 
 }
 
+\keyword{ array }% use one of  RShowDoc("KEYWORDS")
+\keyword{ algebra }% use one of  RShowDoc("KEYWORDS")

@@ -4,14 +4,10 @@
 Khatri-Rao Product
 }
 \description{
- Given \code{X} (n-by-p) and \code{Y} (m-by-p), the Khatri-Rao product \code{Z = krprod(X,Y)} is defined as 
- \tabular{c}{
- \code{ Z[,j] = kronecker(X[,j],Y[,j]) }
- }
- which is the mn-by-p matrix containing Kronecker products of corresponding columns of \code{X} and \code{Y}.
+Calculates the Khatri-Rao product (i.e., columnwise Kronecker product) between two matrices with the same number of columns.
 }
 \usage{
-krprod(X,Y)
+krprod(X, Y)
 }
 \arguments{
   \item{X}{
@@ -20,6 +16,13 @@ krprod(X,Y)
   \item{Y}{
 	Matrix of order m-by-p.
 }
+}
+\details{
+ Given \code{X} (n-by-p) and \code{Y} (m-by-p), the Khatri-Rao product \code{Z = krprod(X,Y)} is defined as 
+ \tabular{c}{
+ \code{ Z[,j] = kronecker(X[,j],Y[,j]) }
+ }
+ which is the mn-by-p matrix containing Kronecker products of corresponding columns of \code{X} and \code{Y}.
 }
 \value{
 	The mn-by-p matrix of columnwise Kronecker products.
@@ -51,3 +54,5 @@ krprod(X,Y)
 
 }
 
+\keyword{ array }% use one of  RShowDoc("KEYWORDS")
+\keyword{ algebra }% use one of  RShowDoc("KEYWORDS")

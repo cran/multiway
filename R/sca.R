@@ -1,12 +1,12 @@
 sca <- 
-  function(X,nfac,nstart=10,maxit=500,
-           type=c("sca-p","sca-pf2","sca-ind","sca-ecp"),
-           rotation=c("none","varimax","promax"),
-           ctol=1e-4,parallel=FALSE,cl=NULL){
+  function(X, nfac, nstart = 10, maxit = 500,
+           type = c("sca-p", "sca-pf2", "sca-ind", "sca-ecp"),
+           rotation = c("none", "varimax", "promax"),
+           ctol = 1e-4, parallel = FALSE, cl = NULL, verbose = TRUE){
     # Simultaneous Component Analysis
     # via alternating least squares (ALS) or closed-form solution
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: May 16, 2017
+    # last updated: May 25, 2018
     
     # check 'X' input
     if(is.array(X)){
@@ -60,69 +60,98 @@ sca <-
     }
     
     # determine type of model fit
-    if(type[1]=="sca-p"){
+    if(type[1] == "sca-p"){
+      
+      # fit model
       matdata <- X[[1]]
-      for(kk in 2:xdim[3]){matdata <- rbind(matdata,X[[kk]])}
-      mysvd <- svd(matdata,nu=nfac,nv=nfac)
-      Dmat <- mysvd$u%*%(diag(nfac)*mysvd$d[1:nfac]/sqrt(xdim[2]))
-      Bmat <- mysvd$v*sqrt(xdim[2])
+      for(kk in 2:xdim[3]) matdata <- rbind(matdata, X[[kk]])
+      mysvd <- svd(matdata, nu = nfac, nv = nfac)
+      Dmat <- mysvd$u %*% (diag(nfac)*mysvd$d[1:nfac] / sqrt(xdim[2]))
+      Bmat <- mysvd$v * sqrt(xdim[2])
       ssr <- sum(rowSums(Dmat^2))
+      
+      # rotate solution
       if(rotation=="varimax"){
         Vrot <- varimax(Bmat)
-        Bmat <- Bmat%*%Vrot$rotmat
-        Dmat <- Dmat%*%Vrot$rotmat
+        Bmat <- Bmat %*% Vrot$rotmat
+        Dmat <- Dmat %*% Vrot$rotmat
       } else if(rotation=="promax"){
         Prot <- promax(Bmat)
-        Bmat <- Bmat%*%Prot$rotmat
-        Dmat <- Dmat%*%t(solve(Prot$rotmat))
+        Bmat <- Bmat %*% Prot$rotmat
+        Dmat <- Dmat %*% t(solve(Prot$rotmat))
       } 
-      Dmats <- vector("list",xdim[3])
+      
+      # get factor score std dev and sse
+      Dmats <- vector("list", xdim[3])
       dfc <- sse <- 0
       Cmat <- matrix(0,xdim[3],nfac)
       for(kk in 1:xdim[3]){
         newdim <- dim(X[[kk]])[1]
         dinds <- 1:newdim + dfc
         Dmats[[kk]] <- as.matrix(Dmat[dinds,])
-        Cmat[kk,] <- sqrt(colSums(Dmats[[kk]]^2)/newdim)
-        sse <- sse + sumsq(X[[kk]]-tcrossprod(Dmats[[kk]],Bmat))
+        Cmat[kk,] <- sqrt(colSums(Dmats[[kk]]^2) / newdim)
+        sse <- sse + sum((X[[kk]] - tcrossprod(Dmats[[kk]], Bmat))^2)
         dfc <- dfc + newdim
       }
       rm(Dmat)
-      Rsq <- 1 - sse/xcx
+      
+      # fit statistics
+      Rsq <- 1 - sse / xcx
       iter <- 1
       cflag <- 0
       Phimat <- NULL
       ntotal <- nrow(matdata)
-      Adf <- ntotal - xdim[3]*(nfac+1)/2
-      Gdf <- xdim[3]*(nfac+1)/2
-      Bdf <- xdim[2]-1L
+      Adf <- ntotal - xdim[3] * (nfac + 1) / 2
+      Gdf <- xdim[3] * (nfac + 1) / 2
+      Bdf <- xdim[2] - 1L
       Cdf <- 0
       edf <- nfac * c(Adf+Gdf,Bdf,Cdf)
       pxdim <- ntotal * xdim[2]
-      GCV <- (sse/pxdim) / (1 - sum(edf)/pxdim)^2
-    } else if(type[1]=="sca-pf2"){
+      GCV <- (sse / pxdim) / (1 - sum(edf) / pxdim)^2
+      
+    } else if(type[1] == "sca-pf2"){
+      
+      # fit model
       if(parallel){
-        nstartlist <- vector("list",nstart)
+        
+        nstartlist <- vector("list", nstart)
         nstartlist[1:nstart] <- nfac
-        pfaclist <- parLapply(cl=cl,X=nstartlist,fun="parafac2_3way",data=X,xcx=xcx,
-                              maxit=maxit,ctol=ctol)
+        scamod <- parLapply(cl = cl, X = nstartlist, fun = "parafac2_3way",
+                            data = X, xcx = xcx, maxit = maxit, ctol = ctol)
+        widx <- which.min(sapply(scamod, function(x) x$SSE))
+        scamod <- scamod[[widx]]
+        
       } else {
-        pfaclist <- vector("list",nstart)
-        for(j in 1:nstart){
-          pfaclist[[j]] <- parafac2_3way(data=X,nfac=nfac,xcx=xcx,maxit=maxit,ctol=ctol)
-        }
-      }
-      widx <- which.max(sapply(pfaclist,function(x) x$Rsq))
-      scamod <- pfaclist[[widx]]
-      rm(pfaclist)
+        
+        if(verbose) pbar <- txtProgressBar(min = 0, max = nstart, style = 3)
+        
+        scamod <- parafac2_3way(data = X, nfac = nfac, xcx = xcx,
+                                maxit = maxit, ctol = ctol)
+        if(verbose) setTxtProgressBar(pbar, 1)
+        if(nstart > 1L){
+          for(j in 2:nstart){
+            scanew <- parafac2_3way(data = X, nfac = nfac, xcx = xcx,
+                                    maxit = maxit, ctol = ctol)
+            if(scanew$SSE < scamod$SSE) scamod <- scanew
+            if(verbose) setTxtProgressBar(pbar, j)
+          } # end for(j in 2:nstart)
+        } # end if(nstart > 1L)
+        
+        if(verbose) close(pbar)
+        
+      } # end if(parallel)
+      
+      # rescale parafac2 solution
       Bmat <- scamod$B
-      Cmat <- matrix(0,xdim[3],nfac)
-      Dmats <- vector("list",xdim[3])
+      Cmat <- matrix(0, xdim[3], nfac)
+      Dmats <- vector("list", xdim[3])
       gsqrt <- sqrt(diag(scamod$Phi))
       for(kk in 1:xdim[3]){
-        Dmats[[kk]] <- scamod$A[[kk]]%*%(diag(nfac)*scamod$C[kk,])
-        Cmat[kk,] <- scamod$C[kk,]*gsqrt/sqrt(dim(scamod$A[[kk]])[1])
+        Dmats[[kk]] <- scamod$A[[kk]] %*% (diag(nfac)*scamod$C[kk,])
+        Cmat[kk,] <- scamod$C[kk,] * gsqrt / sqrt(dim(scamod$A[[kk]])[1])
       }
+      
+      # fit statistics
       Rsq <- scamod$Rsq
       iter <- scamod$iter
       cflag <- scamod$cflag
@@ -130,21 +159,43 @@ sca <-
       Phimat <- Smat %*% scamod$Phi %*% Smat
       GCV <- scamod$GCV
       edf <- scamod$edf
-    } else if(type[1]=="sca-ind"){
+      
+    } else if(type[1] == "sca-ind"){
+      
+      # fit model
       if(parallel){
-        nstartlist <- vector("list",nstart)
+        
+        nstartlist <- vector("list", nstart)
         nstartlist[1:nstart] <- nfac
-        pfaclist <- parLapply(cl=cl,X=nstartlist,fun="parafac2_3way",data=X,xcx=xcx,
-                              const=c(1L,0L,0L),maxit=maxit,ctol=ctol)
+        scamod <- parLapply(cl = cl, X = nstartlist, fun = "parafac2_3way",
+                            data = X, xcx = xcx, const = c("orthog", "uncons", "uncons"),
+                            maxit = maxit, ctol = ctol)
+        widx <- which.min(sapply(scamod, function(x) x$SSE))
+        scamod <- scamod[[widx]]
+        
       } else {
-        pfaclist <- vector("list",nstart)
-        for(j in 1:nstart){
-          pfaclist[[j]] <- parafac2_3way(data=X,nfac=nfac,xcx=xcx,const=c(1L,0L,0L),maxit=maxit,ctol=ctol)
-        }
-      }
-      widx <- which.max(sapply(pfaclist,function(x) x$Rsq))
-      scamod <- pfaclist[[widx]]
-      rm(pfaclist)
+        
+        if(verbose) pbar <- txtProgressBar(min = 0, max = nstart, style = 3)
+        
+        scamod <- parafac2_3way(data = X, nfac = nfac, xcx = xcx,
+                                maxit = maxit, ctol = ctol,
+                                const = c("orthog", "uncons", "uncons"))
+        if(verbose) setTxtProgressBar(pbar, 1)
+        if(nstart > 1L){
+          for(j in 2:nstart){
+            scanew <- parafac2_3way(data = X, nfac = nfac, xcx = xcx,
+                                    maxit = maxit, ctol = ctol,
+                                    const = c("orthog", "uncons", "uncons"))
+            if(scanew$SSE < scamod$SSE) scamod <- scanew
+            if(verbose) setTxtProgressBar(pbar, j)
+          } # end for(j in 2:nstart)
+        } # end if(nstart > 1L)
+        
+        if(verbose) close(pbar)
+        
+      } # end if(parallel)
+      
+      # rescale parafac2 solution
       dg <- sqrt(diag(scamod$Phi))
       Bmat <- scamod$B
       Cmat <- matrix(0,xdim[3],nfac)
@@ -153,30 +204,57 @@ sca <-
         Dmats[[kk]] <- scamod$A[[kk]]%*%(diag(nfac)*scamod$C[kk,])
         Cmat[kk,] <- scamod$C[kk,]*(dg/sqrt(dim(scamod$A[[kk]])[1]))
       }
+      
+      # fit statistics
       Rsq <- scamod$Rsq
       iter <- scamod$iter
       cflag <- scamod$cflag
       Phimat <- diag(nfac)
       GCV <- scamod$GCV
       edf <- scamod$edf
-    } else if(type[1]=="sca-ecp"){
-      nks <- rep(0,xdim[3])
+      
+    } else if(type[1] == "sca-ecp"){
+      
+      # make Cfixed
+      nks <- rep(0, xdim[3])
       for(kk in 1:xdim[3]){nks[kk] <- sqrt(dim(X[[kk]])[1])}
       Cfixed <- matrix(nks,xdim[3],nfac)
+      
+      # fit model
       if(parallel){
-        nstartlist <- vector("list",nstart)
+        
+        nstartlist <- vector("list", nstart)
         nstartlist[1:nstart] <- nfac
-        pfaclist <- parLapply(cl=cl,X=nstartlist,fun="parafac2_3way",data=X,xcx=xcx,
-                              const=c(1L,0L,0L),maxit=maxit,ctol=ctol,Cfixed=Cfixed)
+        scamod <- parLapply(cl = cl, X = nstartlist, fun = "parafac2_3way",
+                            data = X, xcx = xcx, const = c("orthog","uncons","uncons"),
+                            maxit = maxit, ctol = ctol, Cfixed = Cfixed)
+        widx <- which.min(sapply(scamod,function(x) x$SSE))
+        scamod <- scamod[[widx]]
+        
       } else {
-        pfaclist <- vector("list",nstart)
-        for(j in 1:nstart){
-          pfaclist[[j]] <- parafac2_3way(data=X,nfac=nfac,xcx=xcx,const=c(1L,0L,0L),maxit=maxit,ctol=ctol,Cfixed=Cfixed)
-        }
-      }
-      widx <- which.max(sapply(pfaclist,function(x) x$Rsq))
-      scamod <- pfaclist[[widx]]
-      rm(pfaclist)
+        
+        if(verbose) pbar <- txtProgressBar(min = 0, max = nstart, style = 3)
+        
+        scamod <- parafac2_3way(data = X, nfac = nfac, xcx = xcx,
+                                maxit = maxit, ctol = ctol,
+                                const = c("orthog", "uncons", "uncons"))
+        if(verbose) setTxtProgressBar(pbar, 1)
+        if(nstart > 1L){
+          for(j in 2:nstart){
+            scanew <- parafac2_3way(data = X, nfac = nfac, xcx = xcx,
+                                    maxit = maxit, ctol = ctol,
+                                    const = c("orthog", "uncons", "uncons"),
+                                    Cfixed = Cfixed)
+            if(scanew$SSE < scamod$SSE) scamod <- scanew
+            if(verbose) setTxtProgressBar(pbar, j)
+          } # end for(j in 2:nstart)
+        } # end if(nstart > 1L)
+        
+        if(verbose) close(pbar)
+        
+      } # end if(parallel)
+      
+      # order solution
       if(nfac > 1L){
         fordr <- order(colSums(scamod$B^2), decreasing = TRUE)
         scamod$A <- lapply(scamod$A, function(x) x[,fordr])
@@ -184,39 +262,44 @@ sca <-
         scamod$C <- scamod$C[,fordr]
         scamod$Phi <- scamod$Phi[fordr,fordr]
       }
+      
+      # rotate solution
       Bmat <- scamod$B
       rotmat <- diag(nfac)
       if(rotation=="varimax"){
         rotmat <- varimax(Bmat)$rotmat
-        Bmat <- Bmat%*%rotmat
+        Bmat <- Bmat %*% rotmat
       } else if(rotation=="promax"){
         rotmat <- promax(Bmat)$rotmat
-        Bmat <- Bmat%*%rotmat
+        Bmat <- Bmat %*% rotmat
         rotmat <- t(solve(rotmat))
-      } 
+      }
       Dmats <- vector("list",xdim[3])
       for(kk in 1:xdim[3]){
-        Dmats[[kk]] <- scamod$A[[kk]]%*%(diag(nfac)*scamod$C[kk,])%*%rotmat
+        Dmats[[kk]] <- scamod$A[[kk]] %*% (diag(nfac)*scamod$C[kk,]) %*% rotmat
       }
-      Cmat <- scamod$C/nks
+      Cmat <- scamod$C / nks
+      
+      # fit statistics
       Rsq <- scamod$Rsq
       iter <- scamod$iter
       cflag <- scamod$cflag
       Phimat <- scamod$Phi
       ntotal <- sum(sapply(X,nrow))
-      Adf <- ntotal - xdim[3]*(nfac+1)/2
+      Adf <- ntotal - xdim[3] * (nfac + 1) / 2
       Gdf <- 0
       Bdf <- xdim[2]
       Cdf <- 0
       edf <- nfac * c(Adf+Gdf,Bdf,Cdf)
       pxdim <- ntotal * xdim[2]
-      ssenew <- (1-scamod$Rsq)*xcx
-      GCV <- (ssenew/pxdim) / (1 - sum(edf)/pxdim)^2
+      ssenew <- (1 - scamod$Rsq) * xcx
+      GCV <- (ssenew / pxdim) / (1 - sum(edf) / pxdim)^2
     }
-    names(edf) <- c("A","B","C")
-    scafit <- list(D=Dmats,B=Bmat,C=Cmat,Phi=Phimat,SSE=xcx*(1-Rsq),
-                   Rsq=Rsq,GCV=GCV,edf=edf,iter=iter,cflag=cflag,
-                   type=type,rotation=rotation)
+    names(edf) <- c("A", "B", "C")
+    scafit <- list(D = Dmats, B = Bmat, C = Cmat, Phi = Phimat,
+                   SSE = xcx * (1 - Rsq), Rsq = Rsq, GCV = GCV,
+                   edf = edf, iter = iter, cflag = cflag,
+                   type = type, rotation = rotation)
     class(scafit) <- "sca"
     return(scafit)
     

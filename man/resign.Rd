@@ -1,6 +1,7 @@
 \name{resign}
 \alias{resign}
 \alias{resign.indscal}
+\alias{resign.mcr}
 \alias{resign.parafac}
 \alias{resign.parafac2}
 \alias{resign.sca}
@@ -13,21 +14,22 @@ Resigns Multi-Way Factors
 Resigns factors from a \code{multiway} object.
 }
 \usage{
-\method{resign}{indscal}(x, mode="B", newsign=1, ...)
-\method{resign}{parafac}(x, mode="A", newsign=1, absorb="C", ...)
-\method{resign}{parafac2}(x, mode="A", newsign=1, absorb="C", method="pearson", ...)
-\method{resign}{sca}(x, mode="B", newsign=1, ...)
-\method{resign}{tucker}(x, mode="A",newsign=1, ...)
+\method{resign}{indscal}(x, mode = "B", newsign = 1, ...)
+\method{resign}{mcr}(x, mode = "A", newsign = 1, absorb = "C", ...)
+\method{resign}{parafac}(x, mode = "A", newsign = 1, absorb = "C", ...)
+\method{resign}{parafac2}(x, mode = "A", newsign = 1, absorb = "C", method = "pearson", ...)
+\method{resign}{sca}(x, mode = "B", newsign = 1, ...)
+\method{resign}{tucker}(x, mode = "A",newsign = 1, ...)
 }
 \arguments{
   \item{x}{
-  	Object of class "indscal" (output from \code{\link{indscal}}), class "parafac" (output from \code{\link{parafac}}), class "parafac2" (output from \code{\link{parafac2}}), class "sca" (output from \code{\link{sca}}), or class "tucker" (output from \code{\link{tucker}}).
+  	Object of class "indscal" (output from \code{\link{indscal}}), class "mcr" (output from \code{\link{mcr}}), class "parafac" (output from \code{\link{parafac}}), class "parafac2" (output from \code{\link{parafac2}}), class "sca" (output from \code{\link{sca}}), or class "tucker" (output from \code{\link{tucker}}).
 }
   \item{mode}{
   Character indicating which mode to resign.
 }
   \item{newsign}{
-  Desired sign for each column of resigned mode. Can input a scalar or a vector with length equal to the number of factors for the given mode. If \code{x} is of class "parafac2" and \code{mode="A"} you can input a list of covariates (see Details).
+  Desired resigning for each column of specified mode. Can input a scalar or a vector with length equal to the number of factors for the given mode. If \code{x} is of class "parafac2" and \code{mode="A"} you can input a list of covariates (see Details).
 }
   \item{absorb}{
   Character indicating which mode should absorb the inverse of the rescalings applied to \code{mode} (cannot be equal to \code{mode}).
@@ -45,7 +47,7 @@ Resigns factors from a \code{multiway} object.
 \details{
 	If \code{x} is of class "parafac2" and \code{mode="A"}, the input \code{newsign} can be a list where each element contains a covariate vector for resigning Mode A. You need \code{length(newsign[[k]]) = nrow(x$A[[k]])} for all \code{k} when \code{newsign} is a list. In this case, the resigning is implemented according to the sign of \code{cor(newsign[[k]], x$A[[k]][,1], method)}. See Helwig (2013) for details.
   
-  See \code{\link{indscal}}, \code{\link{parafac}}, \code{\link{parafac2}}, \code{\link{sca}}, and \code{\link{tucker}} for more details.
+  See \code{\link{indscal}}, \code{\link{mcr}}, \code{\link{parafac}}, \code{\link{parafac2}}, \code{\link{sca}}, and \code{\link{tucker}} for more details.
 }
 \references{
 Helwig, N. E. (2013). The special sign indeterminacy of the direct-fitting Parafac2 model: Some implications, cautions, and recommendations, for Simultaneous Component Analysis. \emph{Psychometrika, 78}, 725-739.
@@ -55,7 +57,7 @@ Nathaniel E. Helwig <helwig@umn.edu>
 }
 \examples{
 
-### see examples for indscal, parafac, parafac2, sca, and tucker
+### see examples for indscal, mcr, parafac, parafac2, sca, and tucker
 
 }
 

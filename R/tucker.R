@@ -3,11 +3,11 @@ tucker <-
            Bfixed = NULL, Cfixed = NULL, Dfixed = NULL,
            Bstart = NULL, Cstart = NULL, Dstart = NULL,
            maxit = 500, ctol = 1e-4, parallel = FALSE, cl = NULL, 
-           output = c("best", "all"), verbose = FALSE){
+           output = c("best", "all"), verbose = TRUE){
     # 3-way or 4-way Tucker model
     # via alternating least squares (ALS) with optional constraints
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: November 12, 2017
+    # last updated: May 25, 2018
     
     # check 'X' input
     xdim <- dim(X)

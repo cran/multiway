@@ -4,7 +4,7 @@ tucker_4way <-
            Dfixed=NULL,Bstart=NULL,Cstart=NULL,Dstart=NULL){
     # 4-way Tucker model
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: May 4, 2017
+    # last updated: March 8, 2018
     
     ### initialize reshaped data matrices
     xdims <- dim(data)
@@ -35,7 +35,7 @@ tucker_4way <-
     } else {Dold <- Dnew <- Dfixed}
     
     ### iterative update of matrices
-    vtol <- sseold <- xcx
+    vtol <- sseold <- xcx + ctol
     iter <- 0
     cflag <- NA
     while(vtol>ctol && iter<maxit) {

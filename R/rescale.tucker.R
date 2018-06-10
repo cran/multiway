@@ -2,7 +2,7 @@ rescale.tucker <-
   function(x, mode="A", newscale=1, ...){
     # Rescales Weights of fit Tucker model
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: August 19, 2015    
+    # last updated: May 25, 2018
     
     # check mode and dimensions
     mode <- mode[1]
@@ -20,7 +20,9 @@ rescale.tucker <-
     if(mode=="A"){
       
       if(length(newscale)!=mydim[1]) newscale <- rep(newscale[1],mydim[1])
+      if(any(newscale <= 0)) stop("Input 'newscale' must contain positive values.")
       Ascale <- sqrt(colMeans(x$A^2))
+      if(any(Ascale == 0)) Ascale[Ascale == 0] <- 1
       svec <- newscale/Ascale
       if(mydim[1]==1L) { Smat <- matrix(svec) } else { Smat <- diag(svec) }
       x$A <- x$A %*% Smat
@@ -32,8 +34,10 @@ rescale.tucker <-
     } else if(mode=="B"){
       
       if(length(newscale)!=mydim[2]) newscale <- rep(newscale[1],mydim[2])
+      if(any(newscale <= 0)) stop("Input 'newscale' must contain positive values.")
       permvec <- c(apdim[2],apdim[-2])
       Bscale <- sqrt(colMeans(x$B^2))
+      if(any(Bscale == 0)) Bscale[Bscale == 0] <- 1
       svec <- newscale/Bscale
       if(mydim[2]==1L) { Smat <- matrix(svec) } else { Smat <- diag(svec) }
       x$B <- x$B %*% Smat
@@ -45,8 +49,10 @@ rescale.tucker <-
     } else if(mode=="C"){
       
       if(length(newscale)!=mydim[3]) newscale <- rep(newscale[1],mydim[3])
+      if(any(newscale <= 0)) stop("Input 'newscale' must contain positive values.")
       permvec <- c(apdim[3],apdim[-3])
       Cscale <- sqrt(colMeans(x$C^2))
+      if(any(Cscale == 0)) Cscale[Cscale == 0] <- 1
       svec <- newscale/Cscale
       if(mydim[3]==1L) { Smat <- matrix(svec) } else { Smat <- diag(svec) }
       x$C <- x$C %*% Smat
@@ -58,8 +64,10 @@ rescale.tucker <-
     } else if(mode=="D"){
       
       if(length(newscale)!=mydim[4]) newscale <- rep(newscale[1],mydim[4])
+      if(any(newscale <= 0)) stop("Input 'newscale' must contain positive values.")
       permvec <- c(apdim[4],apdim[-4])
       Dscale <- sqrt(colMeans(x$D^2))
+      if(any(Dscale == 0)) Dscale[Dscale == 0] <- 1
       svec <- newscale/Dscale
       if(mydim[4]==1L) { Smat <- matrix(svec) } else { Smat <- diag(svec) }
       x$D <- x$D %*% Smat

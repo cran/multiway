@@ -4,7 +4,7 @@ tucker_3way <-
            Bstart=NULL,Cstart=NULL){
     # 3-way Tucker model
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: May 4, 2017
+    # last updated: March 8, 2018
     
     ### initialize reshaped data matrices
     xdims <- dim(data)
@@ -29,7 +29,7 @@ tucker_3way <-
     } else {Cold <- Cnew <- Cfixed}
     
     ### iterative update of matrices
-    vtol <- sseold <- xcx
+    vtol <- sseold <- xcx + ctol
     iter <- 0
     cflag <- NA
     while(vtol>ctol && iter<maxit) {

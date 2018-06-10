@@ -56,3 +56,6 @@ congru(A)
 congru(A,B)
 
 }
+
+\keyword{ array }% use one of  RShowDoc("KEYWORDS")
+\keyword{ algebra }% use one of  RShowDoc("KEYWORDS")

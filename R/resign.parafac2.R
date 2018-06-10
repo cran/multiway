@@ -2,7 +2,7 @@ resign.parafac2 <-
   function(x, mode="A", newsign=1, absorb="C", method="pearson", ...){
     # Resigns Weights of fit Parafac2 model
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: May 16, 2017
+    # last updated: May 25, 2018
     
     # check mode and absorb and method
     mode <- mode[1]
@@ -28,6 +28,7 @@ resign.parafac2 <-
     } else {
       newsign <- sign(newsign)
       if(length(newsign)!=nfac) newsign <- rep(newsign[1],nfac)
+      if(any(newsign == 0)) stop("Input 'newsign' must contain entries of c(-1, 1).")
     }
     
     # resign factors
@@ -38,6 +39,7 @@ resign.parafac2 <-
         ksign <- rep(0,nmat)
         for(k in 1:nmat){
           ksign[k] <- sign( cor( (x$A[[k]][,1L]), c(newsign[[k]]), method=method ) )
+          if(ksign[k] == 0) ksign[k] <- 1
           x$A[[k]] <- ksign[k] * x$A[[k]]
         }
         if(is.null(x$D)) { x$C <- diag(ksign) %*% x$C } else { x$D <- diag(ksign) %*% x$D }
@@ -47,6 +49,7 @@ resign.parafac2 <-
         Asign <- rep(0, nfac)
         for(k in 1:length(x$A)) Asign <- Asign + colMeans(x$A[[k]]^3)
         Asign <- sign(Asign)
+        if(any(Asign == 0)) Asign[Asign == 0] <- 1
         svec <- newsign*Asign
         if(nfac==1L) { Smat <- matrix(svec) } else { Smat <- diag(svec) }
         for(k in 1:length(x$A)) x$A[[k]] <- x$A[[k]] %*% Smat
@@ -65,6 +68,7 @@ resign.parafac2 <-
     } else if(mode=="B"){
       
       Bsign <- sign(colMeans(x$B^3))
+      if(any(Bsign == 0)) Bsign[Bsign == 0] <- 1
       svec <- newsign*Bsign
       if(nfac==1L) { Smat <- matrix(svec) } else { Smat <- diag(svec) }
       x$B <- x$B %*% Smat
@@ -81,6 +85,7 @@ resign.parafac2 <-
     } else if(mode=="C"){
       
       Csign <- sign(colMeans(x$C^3))
+      if(any(Csign == 0)) Csign[Csign == 0] <- 1
       svec <- newsign*Csign
       if(nfac==1L) { Smat <- matrix(svec) } else { Smat <- diag(svec) }
       x$C <- x$C %*% Smat
@@ -97,6 +102,7 @@ resign.parafac2 <-
     } else if(mode=="D"){
       
       Dsign <- sign(colMeans(x$D^3))
+      if(any(Dsign == 0)) Dsign[Dsign == 0] <- 1
       svec <- newsign*Dsign
       if(nfac==1L) { Smat <- matrix(svec) } else { Smat <- diag(svec) }
       x$D <- x$D %*% Smat

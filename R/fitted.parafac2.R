@@ -2,7 +2,7 @@ fitted.parafac2 <-
   function(object,simplify=TRUE,...){
     # Calculates Fitted Values (lists) for fit Parafac2 Models
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: May 16, 2017
+    # last updated: May 26, 2018
     
     mydim <- c(NA,nrow(object$B),nrow(object$C))
     nf <- ncol(object$B)
@@ -15,9 +15,10 @@ fitted.parafac2 <-
     } else {
       mydim <- c(mydim,nrow(object$D))
       fit <- vector("list",mydim[4])
+      CkrB <- krprod(object$C, object$B)
       for(k in 1:mydim[4]){
-        fit[[k]] <- array(tcrossprod(object$A[[k]]%*%(diag(nf)*object$D[k,]),
-                                     krprod(object$C,object$B)),dim=c(nk[k],mydim[2],mydim[3]))
+        fit[[k]] <- array(tcrossprod(object$A[[k]]%*%(diag(nf)*object$D[k,]),CkrB),
+                          dim=c(nk[k],mydim[2],mydim[3]))
       }
     }
     

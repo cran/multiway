@@ -57,25 +57,27 @@ dnames[[2]] <- c(paste0(dnames[[2]],".bev"), paste0(dnames[[2]],".eth"))[c(1,4,2
 dimnames(X) <- dnames
 
 # center each variable across time (within state)
-Xc <- ncenter(X, mode=1)
+Xc <- ncenter(X, mode = 1)
 
 # scale each variable to have mean square of 1 (across time and states)
-Xs <- nscale(Xc, mode=2, ssnew=44*51)
+Xs <- nscale(Xc, mode = 2)
 
 # fit parafac model with 3 factors
 set.seed(1)
-pfac <- parafac(Xs, nfac=3, nstart=1)
+pfac <- parafac(Xs, nfac = 3, nstart = 1)
 
 # fit parafac model with functional constraints
 set.seed(1)
-pfacF <- parafac(Xs, nfac=3, nstart=1, const=c(6,0,0))
+pfacF <- parafac(Xs, nfac = 3, nstart = 1, 
+                 const = c("smooth", NA, NA))
 
 # fit parafac model with functional and structural constraints
 Bstruc <- matrix(c(rep(c(TRUE,FALSE), c(2,4)), 
                    rep(c(FALSE,TRUE,FALSE), c(2,2,2)),
                    rep(c(FALSE,TRUE), c(4,2))), nrow=6, ncol=3)
 set.seed(1)
-pfacFS <- parafac(Xs, nfac=3, nstart=1, const=c(6,0,0), Bstruc=Bstruc)
+pfacFS <- parafac(Xs, nfac = 3, nstart = 1, 
+                  const = c("smooth", NA, NA), Bstruc = Bstruc)
 
 }
 \keyword{datasets}

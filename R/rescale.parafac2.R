@@ -2,7 +2,7 @@ rescale.parafac2 <-
   function(x, mode="A", newscale=1, absorb="C", ...){
     # Rescales Weights of fit Parafac2 model
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: May 16, 2017
+    # last updated: May 25, 2018
     
     # check mode and absorb
     mode <- mode[1]
@@ -19,12 +19,13 @@ rescale.parafac2 <-
     # check newscale
     nfac <- ncol(x$B)
     if(length(newscale)!=nfac) newscale <- rep(newscale[1],nfac)
-    
+    if(any(newscale <= 0)) stop("Input 'newscale' must contain positive values.")
     
     # rescale factors
     if(mode=="A"){
       
       Ascale <- sqrt(diag(x$Phi) / mean(sapply(x$A,nrow)))
+      if(any(Ascale == 0)) Ascale[Ascale == 0] <- 1
       svec <- newscale/Ascale
       if(nfac==1L) { Smat <- matrix(svec) } else { Smat <- diag(svec) }
       for(k in 1:length(x$A)) x$A[[k]] <- x$A[[k]] %*% Smat
@@ -42,6 +43,7 @@ rescale.parafac2 <-
     } else if(mode=="B"){
       
       Bscale <- sqrt(colMeans(x$B^2))
+      if(any(Bscale == 0)) Bscale[Bscale == 0] <- 1
       svec <- newscale/Bscale
       if(nfac==1L) { Smat <- matrix(svec) } else { Smat <- diag(svec) }
       x$B <- x$B %*% Smat
@@ -59,6 +61,7 @@ rescale.parafac2 <-
     } else if(mode=="C"){
       
       Cscale <- sqrt(colMeans(x$C^2))
+      if(any(Cscale == 0)) Cscale[Cscale == 0] <- 1
       svec <- newscale/Cscale
       if(nfac==1L) { Smat <- matrix(svec) } else { Smat <- diag(svec) }
       x$C <- x$C %*% Smat
@@ -76,6 +79,7 @@ rescale.parafac2 <-
     } else if(mode=="D"){
       
       Dscale <- sqrt(colMeans(x$D^2))
+      if(any(Dscale == 0)) Dscale[Dscale == 0] <- 1
       svec <- newscale/Dscale
       if(nfac==1L) { Smat <- matrix(svec) } else { Smat <- diag(svec) }
       x$D <- x$D %*% Smat

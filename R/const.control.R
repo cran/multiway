@@ -1,30 +1,42 @@
 const.control <-
-  function(const, df = NULL, degree = NULL, nonneg = NULL){
+  function(const, df = NULL, degree = NULL, intercept = NULL){
     
-    # check nway and const
+    # check nway
     nway <- length(const)
     if(!any(nway == c(3L, 4L))) stop("Input 'const' must be a vector of length 3 or 4.")
-    const <- as.integer(const)
-    if(any(const < 0L) | any(const > 6L)) stop("Input 'const' must contain integers between 0 and 6.")
     names(const) <- LETTERS[1:nway]
-    ix <- which(const > 2L)
+    
+    # const types (old and new)
+    const.oldtypes <- c("uncons", "orthog", "nonneg", 
+                        "unismo", "monsmo", "smoper", "smooth")
+    const.newtypes <- c("uncons", "nonneg", "period", "pernon",
+                        "smooth", "smonon", "smoper", "smpeno",
+                        "orthog", "ortnon", "ortsmo", "orsmpe",
+                        "moninc", "monnon", "monsmo", "mosmno",
+                        "unimod", "uninon", "uniper", "unpeno", 
+                        "unismo", "unsmno", "unsmpe", "unsmpn")
+    const.smooth <- c("smooth", "smonon", "smoper", "smpeno",
+                      "ortsmo", "orsmpe", "monsmo", "mosmno", 
+                      "unismo", "unsmno", "unsmpe", "unsmpn")
+    
+    # check const
+    const <- c(const)
+    if(is.integer(const) | is.numeric(const)){
+      const <- as.integer(const)
+      if(any(is.na(const))) const[is.na(const)] <- 0L
+      if(any(const < 0L) | any(const > 6L)) stop("Input 'const' must contain characters or integers between 0 and 6.")
+      const <- const.oldtypes[const + 1L]
+    } else {
+      const <- as.character(const)
+      if(any(is.na(const))) const[is.na(const)] <- "uncons"
+      cid <- pmatch(const, const.newtypes, duplicates.ok = TRUE)
+      if(any(is.na(cid))) stop("Input 'const' must be a character vector of length 3\n with each element matching one of the 18 available options.")
+      const <- const.newtypes[cid]
+    }
     
     # check if any constraints with options
+    ix <- which(!is.na(match(const, const.smooth)))
     if(length(ix) > 0L){
-      
-      # check df
-      if(is.null(df)) df <- rep(NA, nway)
-      df <- as.integer(df)
-      if(length(df) != nway) df <- rep(df[1], nway)
-      for(k in ix){
-        if(is.na(df[k]) | is.nan(df[k]) | is.null(df[k]) | is.infinite(df[k])){
-          df[k] <- 7
-        } else {
-          if(df[k] < 4L) stop(paste0("Input 'df' must be of a vector of length ",nway," with elements >= 4."))
-        }
-      }
-      df[-ix] <- NA
-      names(df) <- LETTERS[1:nway]
       
       # check degree
       if(is.null(degree)) degree <- rep(NA, nway)
@@ -40,19 +52,40 @@ const.control <-
       degree[-ix] <- NA
       names(degree) <- LETTERS[1:nway]
       
-      # check nonneg
-      if(is.null(nonneg)) nonneg <- rep(FALSE, nway)
-      nonneg <- as.logical(nonneg)
-      if(length(nonneg) != nway) nonneg <- rep(nonneg[1], nway)
-      nonneg[-ix] <- NA
-      names(nonneg) <- LETTERS[1:nway]
+      # check intercept
+      if(is.null(intercept)) intercept <- rep(TRUE, nway)
+      intercept <- as.logical(intercept)
+      if(length(intercept) != nway) intercept <- rep(intercept[1], nway)
+      intercept[-ix] <- NA
+      names(intercept) <- LETTERS[1:nway]
+      
+      # check df
+      if(is.null(df)) df <- rep(NA, nway)
+      df <- as.integer(df)
+      if(length(df) != nway) df <- rep(df[1], nway)
+      for(k in ix){
+        mindf <- degree[k] + 1 - !intercept[k]
+        if(is.na(df[k]) | is.nan(df[k]) | is.null(df[k]) | is.infinite(df[k])){
+          df[k] <- max(7, mindf)
+        } else {
+          if(df[k] < mindf) {
+            warning("Input 'df' is too small: need df[k] >= degree[k] + 1 - !intercept[k].\n Resetting to minimum possible df.")
+            df[k] <- mindf
+          }
+        }
+      }
+      df[-ix] <- NA
+      names(df) <- LETTERS[1:nway]
       
     } else {
       
-      df <- degree <- nonneg <- rep(NA, nway)
+      df <- degree <- intercept <- rep(NA, nway)
       
     } # end if(length(ix) > 2L)
     
-    return(list(const=const, df=df, degree=degree, nonneg=nonneg))
+    # return results
+    constlist <- list(const = const, df = df, 
+                      degree = degree, intercept = intercept)
+    return(constlist)
     
   }

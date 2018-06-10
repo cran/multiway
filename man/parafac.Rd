@@ -4,27 +4,16 @@
 Parallel Factor Analysis-1
 }
 \description{
-Given a 3-way array \code{X = array(x,dim=c(I,J,K))}, the 3-way Parafac model can be written as 
-\tabular{c}{
-\code{ X[i,j,k] = sum A[i,r]*B[j,r]*C[k,r] + E[i,j,k] }
-} 
-where \code{A = matrix(a,I,R)} are the Mode A (first mode) weights, \code{B = matrix(b,J,R)} are the Mode B (second mode) weights, \code{C = matrix(c,K,R)} are the Mode C (third mode) weights, and \code{E = array(e,dim=c(I,J,K))} is the 3-way residual array. The summation is for \code{r = seq(1,R)}.
-
-Given a 4-way array \code{X = array(x,dim=c(I,J,K,L))}, the 4-way Parafac model can be written as 
-\tabular{c}{
-\code{ X[i,j,k,l] = sum A[i,r]*B[j,r]*C[k,r]*D[l,r] + E[i,j,k,l] }
-} 
-where \code{D = matrix(d,L,R)} are the Mode D (fourth mode) weights, \code{E = array(e,dim=c(I,J,K,L))} is the 4-way residual array, and the other terms can be interprered as previously described.
-
-Weight matrices are estimated using an alternating least squares algorithm with optional constraints.
+Fits Richard A. Harshman's Parallel Factors (Parafac) model to 3-way or 4-way data arrays. Parameters are estimated via alternating least squares with optional constraints.
 }
 \usage{
 parafac(X, nfac, nstart = 10, const = NULL, control = NULL,
-        Bfixed = NULL, Cfixed = NULL, Dfixed = NULL,
-        Bstart = NULL, Cstart = NULL, Dstart = NULL,
-        Bstruc = NULL, Cstruc = NULL, Dstruc = NULL,
+        Afixed = NULL, Bfixed = NULL, Cfixed = NULL, Dfixed = NULL,
+        Astart = NULL, Bstart = NULL, Cstart = NULL, Dstart = NULL,
+        Astruc = NULL, Bstruc = NULL, Cstruc = NULL, Dstruc = NULL,
+        Amodes = NULL, Bmodes = NULL, Cmodes = NULL, Dmodes = NULL,
         maxit = 500, ctol = 1e-4, parallel = FALSE, cl = NULL,
-        output = c("best", "all"), verbose = FALSE)
+        output = c("best", "all"), verbose = TRUE, backfit = FALSE)
 }
 \arguments{
   \item{X}{
@@ -37,45 +26,58 @@ parafac(X, nfac, nstart = 10, const = NULL, control = NULL,
   Number of random starts.
 }
   \item{const}{
-  Constraints for each mode. Vector of length 3 or 4 with entries:
-  0 = unconstrained (default),
-  1 = orthogonal,
-  2 = non-negative,
-  3 = unimodal,
-  4 = monotonic,
-  5 = periodic,
-  6 = smooth.
-  Use \code{control} argument to adjust options for constraints 3-6.
+  Character vector of length 3 or 4 giving the constraints for each mode (defaults to unconstrained). See \code{\link{const}} for the 24 available options.
 }
 \item{control}{
-  List of parameters controlling options for constraints 3-6. This is passed to \code{\link{const.control}}, which describes the available options.
+  List of parameters controlling options for smoothness constraints. This is passed to \code{\link{const.control}}, which describes the available options.
+}
+  \item{Afixed}{
+  Used to fit model with fixed Mode A weights.
 }
   \item{Bfixed}{
-  Fixed Mode B weights. Only used to fit model with fixed Mode B weights.
+  Used to fit model with fixed Mode B weights.
 }
   \item{Cfixed}{
-  Fixed Mode C weights. Only used to fit model with fixed Mode C weights.
+  Used to fit model with fixed Mode C weights.
 }
   \item{Dfixed}{
-  Fixed Mode D weights. Only used to fit model with fixed Mode D weights. 
+  Used to fit model with fixed Mode D weights. 
+}
+  \item{Astart}{
+  Starting Mode A weights. Default uses random weights.
 }
   \item{Bstart}{
-  Starting Mode B weights for ALS algorithm. Default uses random weights.
+  Starting Mode B weights. Default uses random weights.
 }
   \item{Cstart}{
-  Starting Mode C weights for ALS algorithm. Default uses random weights.
+  Starting Mode C weights. Default uses random weights.
 }
   \item{Dstart}{
-  Starting Mode D weights for ALS algorithm. Default uses random weights.
+  Starting Mode D weights. Default uses random weights.
+}
+  \item{Astruc}{
+  Structure constraints for Mode A weights. See Note.
 }
   \item{Bstruc}{
-  Structure constraints for Mode B weights. Default uses unstructured weights.
+  Structure constraints for Mode B weights. See Note.
 }
   \item{Cstruc}{
-  Structure constraints for Mode C weights. Default uses unstructured weights.
+  Structure constraints for Mode C weights. See Note.
 }
   \item{Dstruc}{
-  Structure constraints for Mode D weights. Default uses unstructured weights.
+  Structure constraints for Mode D weights. See Note.
+}
+  \item{Amodes}{
+  Mode ranges for Mode A weights (for unimodality constraints). See Note.
+}
+  \item{Bmodes}{
+  Mode ranges for Mode B weights (for unimodality constraints). See Note.
+}
+  \item{Cmodes}{
+  Mode ranges for Mode C weights (for unimodality constraints). See Note.
+}
+  \item{Dmodes}{
+  Mode ranges for Mode D weights (for unimodality constraints). See Note.
 }
   \item{maxit}{
   Maximum number of iterations.
@@ -93,11 +95,31 @@ parafac(X, nfac, nstart = 10, const = NULL, control = NULL,
   Output the best solution (default) or output all \code{nstart} solutions.
 }
   \item{verbose}{
-  Logical indicating if extra information on progress should be reported. Ignored if \code{parallel=TRUE}.
+  If \code{TRUE}, fitting progress is printed via \code{\link{txtProgressBar}}. Ignored if \code{parallel=TRUE}.
+}
+  \item{backfit}{
+  Should backfitting algorithm be used for \code{\link{cmls}}?
 }
 }
+
+\details{
+Given a 3-way array \code{X = array(x, dim = c(I,J,K))}, the 3-way Parafac model can be written as 
+\tabular{c}{
+\code{ X[i,j,k] = sum A[i,r]*B[j,r]*C[k,r] + E[i,j,k] }
+} 
+where \code{A = matrix(a,I,R)} are the Mode A (first mode) weights, \code{B = matrix(b,J,R)} are the Mode B (second mode) weights, \code{C = matrix(c,K,R)} are the Mode C (third mode) weights, and \code{E = array(e,dim=c(I,J,K))} is the 3-way residual array. The summation is for \code{r = seq(1,R)}.
+
+Given a 4-way array \code{X = array(x, dim = c(I,J,K,L))}, the 4-way Parafac model can be written as 
+\tabular{c}{
+\code{ X[i,j,k,l] = sum A[i,r]*B[j,r]*C[k,r]*D[l,r] + E[i,j,k,l] }
+} 
+where \code{D = matrix(d,L,R)} are the Mode D (fourth mode) weights, \code{E = array(e,dim=c(I,J,K,L))} is the 4-way residual array, and the other terms can be interprered as previously described.
+
+Weight matrices are estimated using an alternating least squares algorithm with optional constraints.
+}
+
 \value{
-If \code{output="best"}, returns an object of class \code{"parafac"} with the following elements:
+If \code{output = "best"}, returns an object of class \code{"parafac"} with the following elements:
 \item{A}{Mode A weight matrix.}
 \item{B}{Mode B weight matrix.}
 \item{C}{Mode C weight matrix.}
@@ -107,7 +129,7 @@ If \code{output="best"}, returns an object of class \code{"parafac"} with the fo
 \item{GCV}{Generalized Cross-Validation.}
 \item{edf}{Effective degrees of freedom.}
 \item{iter}{Number of iterations.}
-\item{cflag}{Convergence flag.}
+\item{cflag}{Convergence flag. See Note.}
 \item{const}{See argument \code{const}.}
 \item{control}{See argument \code{control}.}
 \item{fixed}{Logical vector indicating whether 'fixed' weights were used for each mode.}
@@ -116,36 +138,40 @@ If \code{output="best"}, returns an object of class \code{"parafac"} with the fo
 Otherwise returns a list of length \code{nstart} where each element is an object of class \code{"parafac"}.
 }
 \references{
-Bro, R., & De Jong, S. (1997). A fast non-negativity-constrained least squares algorithm. \emph{Journal of Chemometrics, 11}, 393-401.
-
 Harshman, R. A. (1970). Foundations of the PARAFAC procedure: Models and conditions for an "explanatory" multimodal factor analysis. \emph{UCLA Working Papers in Phonetics, 16}, 1-84.
 
 Harshman, R. A., & Lundy, M. E. (1994). PARAFAC: Parallel factor analysis. \emph{Computational Statistics and Data Analysis, 18}, 39-72.
 
 Helwig, N. E. (2017). Estimating latent trends in multivariate longitudinal data via Parafac2 with functional and structural constraints. \emph{Biometrical Journal, 59}(4), 783-803.
 
-Ramsay, J. O. (1988). Monotone regression splines in action. \emph{Statistical Science, 3}, 425-441.
+Helwig, N. E. (in prep). Constrained parallel factor analysis via the R package multiway.
 }
 \author{
 Nathaniel E. Helwig <helwig@umn.edu>
 }
 \note{
-Default use is 10 random strarts (\code{nstart=10}) with 500 maximum iterations of the ALS algorithm for each start (\code{maxit=500}) using a convergence tolerance of 1e-4 (\code{ctol=1e-4}). The algorithm is determined to have converged once the change in R^2 is less than or equal to \code{ctol}.
+Missing data should be specified as \code{NA} values in the input \code{X}. The missing data are randomly initialized and then iteratively imputed as a part of the algorithm.
 
-Output \code{cflag} gives convergence information: \code{cflag=0} if ALS algorithm converged normally, \code{cflag=1} if maximum iteration limit was reached before convergence, and \code{cflag=2} if ALS algorithm terminated abnormally due to a problem with the constraints.
+Structure constraints should be specified with a matrix of logicals (TRUE/FALSE), such that FALSE elements indicate a weight should be constrained to be zero. Default uses unstructured weights, i.e., a matrix of all TRUE values. 
 
-Constraints 3 (unimodality) and 4 (monotonicity) are implemented using I-splines, and constraints 5 (periodicity) and 6 (smoothness) are implemented using M-splines (see Ramsay, 1988).
+When using unimodal constraints, the \code{*modes} inputs can be used to specify the mode search range for each factor. These inputs should be matrices with dimension \code{c(2,nfac)} where the first row gives the minimum mode value and the second row gives the maximum mode value (with respect to the indicies of the corresponding weight matrix).
 
-Missing data should be specified as \code{NA} values in the input \code{X}. The missing data are randomly initialized and then iteratively imputed as a part of the ALS algorithm.
+Output \code{cflag} gives convergence information: \code{cflag = 0} if algorithm converged normally, \code{cflag = 1} if maximum iteration limit was reached before convergence, and \code{cflag = 2} if algorithm terminated abnormally due to a problem with the constraints.
 }
 \section{Warnings }{
-The ALS algorithm can perform poorly if the number of factors \code{nfac} is set too large.
+The algorithm can perform poorly if the number of factors \code{nfac} is set too large.
+}
 
-Non-negativity constraints can be sensitive to local optima. 
+\seealso{
+The \code{\link{fitted.parafac}} function creates the model-implied fitted values from a fit \code{"parafac"} object.
 
-Non-negativity constraints can result in slower performance.
+The \code{\link{resign.parafac}} function can be used to resign factors from a fit \code{"parafac"} object.
 
-Structure constraints for override constraints in \code{const} input.
+The \code{\link{rescale.parafac}} function can be used to rescale factors from a fit \code{"parafac"} object.
+
+The \code{\link{reorder.parafac}} function can be used to reorder factors from a fit \code{"parafac"} object.
+
+The \code{\link{cmls}} function (from \bold{CMLS} package) is called as a part of the alternating least squares algorithm.
 }
 
 \examples{
@@ -153,27 +179,29 @@ Structure constraints for override constraints in \code{const} input.
 
 # create random data array with Parafac structure
 set.seed(3)
-mydim <- c(50,20,5)
+mydim <- c(50, 20, 5)
 nf <- 3
-Amat <- matrix(rnorm(mydim[1]*nf),mydim[1],nf)
-Bmat <- matrix(runif(mydim[2]*nf),mydim[2],nf)
-Cmat <- matrix(runif(mydim[3]*nf),mydim[3],nf)
-Xmat <- array(tcrossprod(Amat,krprod(Cmat,Bmat)),dim=mydim)
-Emat <- array(rnorm(prod(mydim)),dim=mydim)
-Emat <- nscale(Emat,0,sumsq(Xmat))   # SNR=1
+Amat <- matrix(rnorm(mydim[1]*nf), nrow = mydim[1], ncol = nf)
+Bmat <- matrix(runif(mydim[2]*nf), nrow = mydim[2], ncol = nf)
+Cmat <- matrix(runif(mydim[3]*nf), nrow = mydim[3], ncol = nf)
+Xmat <- tcrossprod(Amat, krprod(Cmat, Bmat))
+Xmat <- array(Xmat, dim = mydim)
+Emat <- array(rnorm(prod(mydim)), dim = mydim)
+Emat <- nscale(Emat, 0, ssnew = sumsq(Xmat))   # SNR = 1
 X <- Xmat + Emat
 
 # fit Parafac model (unconstrained)
-pfac <- parafac(X,nfac=nf,nstart=1)
+pfac <- parafac(X, nfac = nf, nstart = 1)
 pfac
 
 # fit Parafac model (non-negativity on Modes B and C)
-pfacNN <- parafac(X,nfac=nf,nstart=1,const=c(0,2,2))
+pfacNN <- parafac(X, nfac = nf, nstart = 1, 
+                  const = c("uncons", "nonneg", "nonneg"))
 pfacNN
 
 # check solution
 Xhat <- fitted(pfac)
-sum((Xmat-Xhat)^2)/prod(mydim)
+sum((Xmat - Xhat)^2) / prod(mydim)
 
 # reorder and resign factors
 pfac$B[1:4,]
@@ -182,16 +210,16 @@ pfac$B[1:4,]
 pfac <- resign(pfac, mode="B")
 pfac$B[1:4,]
 Xhat <- fitted(pfac)
-sum((Xmat-Xhat)^2)/prod(mydim)
+sum((Xmat - Xhat)^2) / prod(mydim)
 
 # rescale factors
 colSums(pfac$B^2)
 colSums(pfac$C^2)
-pfac <- rescale(pfac, mode="C", absorb="B")
+pfac <- rescale(pfac, mode = "C", absorb = "B")
 colSums(pfac$B^2)
 colSums(pfac$C^2)
 Xhat <- fitted(pfac)
-sum((Xmat-Xhat)^2)/prod(mydim)
+sum((Xmat - Xhat)^2) / prod(mydim)
 
 
 ##########   4-way example   ##########
@@ -200,28 +228,33 @@ sum((Xmat-Xhat)^2)/prod(mydim)
 set.seed(4)
 mydim <- c(30,10,8,10)
 nf <- 4
-aseq <- seq(-3,3,length=mydim[1])
+aseq <- seq(-3, 3, length.out = mydim[1])
 Amat <- cbind(dnorm(aseq), dchisq(aseq+3.1, df=3),
               dt(aseq-2, df=4), dgamma(aseq+3.1, shape=3, rate=1))
-Bmat <- svd(matrix(runif(mydim[2]*nf),mydim[2],nf))$u
-Cmat <- matrix(runif(mydim[3]*nf),mydim[3],nf)
-Dmat <- matrix(runif(mydim[4]*nf),mydim[4],nf)
-Xmat <- array(tcrossprod(Amat,krprod(Dmat,krprod(Cmat,Bmat))),dim=mydim)
-Emat <- array(rnorm(prod(mydim)),dim=mydim)
-Emat <- nscale(Emat,0,sumsq(Xmat))   # SNR=1
+Bmat <- svd(matrix(runif(mydim[2]*nf), nrow = mydim[2], ncol = nf), nv = 0)$u
+Cmat <- matrix(runif(mydim[3]*nf), nrow = mydim[3], ncol = nf)
+Cstruc <- Cmat > 0.5
+Cmat <- Cmat * Cstruc
+Dmat <- matrix(runif(mydim[4]*nf), nrow = mydim[4], ncol = nf)
+Xmat <- tcrossprod(Amat, krprod(Dmat, krprod(Cmat, Bmat)))
+Xmat <- array(Xmat, dim = mydim)
+Emat <- array(rnorm(prod(mydim)), dim = mydim)
+Emat <- nscale(Emat, 0, ssnew = sumsq(Xmat))   # SNR = 1
 X <- Xmat + Emat
 
-# fit Parafac model (unimodal A, orthogonal B, non-negative C, non-negative D)
-pfac <- parafac(X,nfac=nf,nstart=1,const=c(3,1,2,2))
+# fit Parafac model (unimodal and smooth A, orthogonal B, 
+#                    non-negative and structured C, non-negative D)
+pfac <- parafac(X, nfac = nf, nstart = 1, Cstruc = Cstruc, 
+                const = c("unismo", "orthog", "nonneg", "nonneg"))
 pfac
 
 # check solution
 Xhat <- fitted(pfac)
-sum((Xmat-Xhat)^2)/prod(mydim)
+sum((Xmat - Xhat)^2) / prod(mydim)
 congru(Amat, pfac$A)
 crossprod(pfac$B)
 pfac$C
-
+Cstruc
 
 \dontrun{
 
@@ -231,26 +264,33 @@ pfac$C
 set.seed(3)
 mydim <- c(50,20,5)
 nf <- 3
-Amat <- matrix(rnorm(mydim[1]*nf),mydim[1],nf)
-Bmat <- matrix(runif(mydim[2]*nf),mydim[2],nf)
-Cmat <- matrix(runif(mydim[3]*nf),mydim[3],nf)
-Xmat <- array(tcrossprod(Amat,krprod(Cmat,Bmat)),dim=mydim)
-Emat <- array(rnorm(prod(mydim)),dim=mydim)
-Emat <- nscale(Emat,0,sumsq(Xmat))   # SNR=1
+Amat <- matrix(rnorm(mydim[1]*nf), nrow = mydim[1], ncol = nf)
+Bmat <- matrix(runif(mydim[2]*nf), nrow = mydim[2], ncol = nf)
+Cmat <- matrix(runif(mydim[3]*nf), nrow = mydim[3], ncol = nf)
+Xmat <- tcrossprod(Amat, krprod(Cmat, Bmat))
+Xmat <- array(Xmat, dim = mydim)
+Emat <- array(rnorm(prod(mydim)), dim = mydim)
+Emat <- nscale(Emat, 0, ssnew = sumsq(Xmat))   # SNR = 1
 X <- Xmat + Emat
 
 # fit Parafac model (10 random starts -- sequential computation)
 set.seed(1)
-system.time({pfac <- parafac(X,nfac=nf)})
+system.time({pfac <- parafac(X, nfac = nf)})
 pfac
 
 # fit Parafac model (10 random starts -- parallel computation)
-set.seed(1)
 cl <- makeCluster(detectCores())
-ce <- clusterEvalQ(cl,library(multiway))
-system.time({pfac <- parafac(X,nfac=nf,parallel=TRUE,cl=cl)})
+ce <- clusterEvalQ(cl, library(multiway))
+clusterSetRNGStream(cl, 1)
+system.time({pfac <- parafac(X, nfac = nf, parallel = TRUE, cl = cl)})
 pfac
 stopCluster(cl)
 }
 
 }
+
+
+% Add one or more standard keywords, see file 'KEYWORDS' in the
+% R documentation directory.
+\keyword{ models }% use one of  RShowDoc("KEYWORDS")
+\keyword{ multivariate }% use one of  RShowDoc("KEYWORDS")

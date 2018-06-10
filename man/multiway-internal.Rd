@@ -6,11 +6,10 @@
 
 %% List of Internal Functions Called
 \alias{ed2sp}
-\alias{fmnls}
-\alias{fsmls}
-\alias{fumls}
-\alias{IsplineBasis}
-\alias{MsplineBasis}
+\alias{initcmls}
+\alias{mcr_parafac}
+\alias{mcr_parafac2}
+\alias{mcr_tucker}
 \alias{parafac_3way}
 \alias{parafac_3wayna}
 \alias{parafac_4way}
@@ -19,7 +18,6 @@
 \alias{parafac2_3wayna}
 \alias{parafac2_4way}
 \alias{parafac2_4wayna}
-\alias{rfunc}
 \alias{tucker_3way}
 \alias{tucker_3wayna}
 \alias{tucker_4way}

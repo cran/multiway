@@ -1,5 +1,6 @@
 \name{fitted}
 \alias{fitted.indscal}
+\alias{fitted.mcr}
 \alias{fitted.parafac}
 \alias{fitted.parafac2}
 \alias{fitted.sca}
@@ -12,18 +13,22 @@ Extract Multi-Way Fitted Values
 Calculates fitted array (or list of arrays) from a \code{multiway} object.
 }
 \usage{
-\method{fitted}{indscal}(object,...)
-\method{fitted}{parafac}(object,...)
-\method{fitted}{parafac2}(object,simplify=TRUE,...)
-\method{fitted}{sca}(object,...)
-\method{fitted}{tucker}(object,...)
+\method{fitted}{indscal}(object, ...)
+\method{fitted}{mcr}(object, type = c("X", "Y"), ...)
+\method{fitted}{parafac}(object, ...)
+\method{fitted}{parafac2}(object, simplify = TRUE, ...)
+\method{fitted}{sca}(object, ...)
+\method{fitted}{tucker}(object, ...)
 }
 \arguments{
   \item{object}{
-  	Object of class "indscal" (output from \code{\link{indscal}}), class "parafac" (output from \code{\link{parafac}}), class "parafac2" (output from \code{\link{parafac2}}), class "sca" (output from \code{\link{sca}}), or class "tucker" (output from \code{\link{tucker}}).
+  	Object of class "indscal" (output from \code{\link{indscal}}), class "mcr" (output from \code{\link{mcr}}), class "parafac" (output from \code{\link{parafac}}), class "parafac2" (output from \code{\link{parafac2}}), class "sca" (output from \code{\link{sca}}), or class "tucker" (output from \code{\link{tucker}}).
 }
   \item{simplify}{
-  For "parafac2", setting \code{simplify=FALSE} will always return a list of fitted arrays. Default of \code{simplify=TRUE} returns a fitted array if all levels of the nesting mode have the same number of observations (and a list of fitted arrays otherwise).
+  For "parafac2", setting \code{simplify = FALSE} will always return a list of fitted arrays. Default of \code{simplify = TRUE} returns a fitted array if all levels of the nesting mode have the same number of observations (and a list of fitted arrays otherwise).
+}
+  \item{type}{
+  For "mcr", setting \code{type = "X"} returns the fitted predictor array (default), whereas setting \code{type = "Y"} retuns the fitted response array.
 }
   \item{\ldots}{
   Ignored.
@@ -31,6 +36,8 @@ Calculates fitted array (or list of arrays) from a \code{multiway} object.
 }
 \value{
   "indscal" objects: 3-way array.
+  
+  "mcr" objects: 3-way (X) or 2-way (Y) array.
   
   "parafac" objects: 3-way or 4-way array.
   
@@ -41,14 +48,14 @@ Calculates fitted array (or list of arrays) from a \code{multiway} object.
   "tucker" objects: 3-way or 4-way array.
 }
 \details{
-	See \code{\link{indscal}}, \code{\link{parafac}}, \code{\link{parafac2}}, \code{\link{sca}}, and \code{\link{tucker}} for more details.
+	See \code{\link{indscal}}, \code{\link{mcr}}, \code{\link{parafac}}, \code{\link{parafac2}}, \code{\link{sca}}, and \code{\link{tucker}} for more details.
 }
 \author{
 Nathaniel E. Helwig <helwig@umn.edu>
 }
 \examples{
 
-### see examples for indscal, parafac, parafac2, sca, and tucker
+### see examples for indscal, mcr, parafac, parafac2, sca, and tucker
 
 }
 

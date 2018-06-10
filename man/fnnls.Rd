@@ -6,12 +6,12 @@ Fast Non-Negative Least Squares
 \description{
  Finds the vector \code{b} minimizing 
  \tabular{c}{
- \code{sum( (y - X\%*\%b)^2 )}
+ \code{sum( (y - X \%*\% b)^2 )}
  }
  subject to \code{b[j] >= 0} for all \code{j}.
 }
 \usage{
-fnnls(XtX,Xty,ntol=NULL)
+fnnls(XtX, Xty, ntol = NULL)
 }
 \arguments{
   \item{XtX}{
@@ -72,3 +72,4 @@ crossprod(btrue-beta)/20
 
 }
 
+\keyword{ optimize }% __ONLY ONE__ keyword per line

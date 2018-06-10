@@ -7,7 +7,7 @@ Core Consistency Diagnostic
 Calculates Bro and Kiers's core consistency diagnostic (CORCONDIA) for a fit \code{\link{parafac}}  or \code{\link{parafac2}} model. For Parafac2, the diagnostic is calculated after transforming the data.
 }
 \usage{
-corcondia(X, object, divisor=c("nfac","core"))
+corcondia(X, object, divisor = c("nfac","core"))
 }
 \arguments{
   \item{X}{
@@ -48,7 +48,7 @@ Bmat <- matrix(runif(mydim[2]*nf),mydim[2],nf)
 Cmat <- matrix(runif(mydim[3]*nf),mydim[3],nf)
 Xmat <- array(tcrossprod(Amat,krprod(Cmat,Bmat)),dim=mydim)
 Emat <- array(rnorm(prod(mydim)),dim=mydim)
-Emat <- nscale(Emat,0,sumsq(Xmat))   # SNR=1
+Emat <- nscale(Emat, 0, ssnew = sumsq(Xmat))   # SNR=1
 X <- Xmat + Emat
 
 # fit Parafac model (1-4 factors)

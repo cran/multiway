@@ -4,8 +4,20 @@
 Center n-th Dimension of Array
 }
 \description{
- Fiber-center across the levels of the specified mode. Can input 2-way, 3-way, and 4-way arrays, or input a list containing array elements.
- 
+Fiber-center across the levels of the specified mode. Can input 2-way, 3-way, and 4-way arrays, or input a list containing array elements.
+}
+\usage{
+ncenter(X, mode = 1)
+}
+\arguments{
+  \item{X}{
+	Array (2-way, 3-way, or 4-way) or a list containing array elements.
+}
+  \item{mode}{
+	Mode to center across.
+}
+}
+\details{
  With \code{X} a matrix (I-by-J) there are two options:
  \tabular{rcl}{
  \code{ mode=1: } \tab \tab \code{ x[i,j] - mean(x[,j]) } \cr
@@ -27,17 +39,6 @@ Center n-th Dimension of Array
  \code{ mode=4: } \tab \tab \code{ x[i,j,k,l] - mean(x[i,j,k,]) } \cr
  }
 
-}
-\usage{
-ncenter(X,mode=1)
-}
-\arguments{
-  \item{X}{
-	Array (2-way, 3-way, or 4-way) or a list containing array elements.
-}
-  \item{mode}{
-	Mode to center across.
-}
 }
 \value{
 	Returns centered version of \code{X}.
@@ -77,4 +78,7 @@ Xc <- ncenter(X)
 sum(colSums(Xc[[1]]))
 
 }
+
+\keyword{ array }% use one of  RShowDoc("KEYWORDS")
+\keyword{ algebra }% use one of  RShowDoc("KEYWORDS")
 

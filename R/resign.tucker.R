@@ -2,7 +2,7 @@ resign.tucker <-
   function(x, mode="A", newsign=1, ...){
     # Resigns Weights of fit Tucker model
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: August 19, 2015    
+    # last updated: May 25, 2018
     
     # check mode and dimensions
     mode <- mode[1]
@@ -18,10 +18,12 @@ resign.tucker <-
     
     # resign factors
     newsign <- sign(newsign)
+    if(any(newsign == 0)) stop("Input 'newsign' must contain entries of c(-1, 1).")
     if(mode=="A"){
       
       if(length(newsign)!=mydim[1]) newsign <- rep(newsign[1],mydim[1])
       Asign <- sign(colMeans(x$A^3))
+      if(any(Asign == 0)) Asign[Asign == 0] <- 1
       svec <- newsign*Asign
       if(mydim[1]==1L) { Smat <- matrix(svec) } else { Smat <- diag(svec) }
       x$A <- x$A %*% Smat
@@ -34,6 +36,7 @@ resign.tucker <-
       if(length(newsign)!=mydim[2]) newsign <- rep(newsign[1],mydim[2])
       permvec <- c(apdim[2],apdim[-2])
       Bsign <- sign(colMeans(x$B^3))
+      if(any(Bsign == 0)) Bsign[Bsign == 0] <- 1
       svec <- newsign*Bsign
       if(mydim[2]==1L) { Smat <- matrix(svec) } else { Smat <- diag(svec) }
       x$B <- x$B %*% Smat
@@ -46,6 +49,7 @@ resign.tucker <-
       if(length(newsign)!=mydim[3]) newsign <- rep(newsign[1],mydim[3])
       permvec <- c(apdim[3],apdim[-3])
       Csign <- sign(colMeans(x$C^3))
+      if(any(Csign == 0)) Csign[Csign == 0] <- 1
       svec <- newsign*Csign
       if(mydim[3]==1L) { Smat <- matrix(svec) } else { Smat <- diag(svec) }
       x$C <- x$C %*% Smat
@@ -58,6 +62,7 @@ resign.tucker <-
       if(length(newsign)!=mydim[4]) newsign <- rep(newsign[1],mydim[4])
       permvec <- c(apdim[4],apdim[-4])
       Dsign <- sign(colMeans(x$D^3))
+      if(any(Dsign == 0)) Dsign[Dsign == 0] <- 1
       svec <- newsign*Dsign
       if(mydim[4]==1L) { Smat <- matrix(svec) } else { Smat <- diag(svec) }
       x$D <- x$D %*% Smat

@@ -4,6 +4,10 @@
 Tucker Factor Analysis
 }
 \description{
+Fits Ledyard R. Tucker's factor analysis model to 3-way or 4-way data arrays. Parameters are estimated via alternating least squares.
+}
+
+\details{
 Given a 3-way array \code{X = array(x,dim=c(I,J,K))}, the 3-way Tucker model can be written as 
 \tabular{c}{
 \code{ X[i,j,k] = sum sum sum A[i,p]*B[j,q]*C[k,r]*G[p,q,r] + E[i,j,k] }
@@ -24,7 +28,7 @@ tucker(X, nfac, nstart = 10, Afixed = NULL,
        Bfixed = NULL, Cfixed = NULL, Dfixed = NULL,
        Bstart = NULL, Cstart = NULL, Dstart = NULL,
        maxit = 500, ctol = 1e-4, parallel = FALSE, cl = NULL, 
-       output = c("best", "all"), verbose = FALSE)
+       output = c("best", "all"), verbose = TRUE)
 }
 \arguments{
   \item{X}{
@@ -73,7 +77,7 @@ tucker(X, nfac, nstart = 10, Afixed = NULL,
   Output the best solution (default) or output all \code{nstart} solutions.
 }
   \item{verbose}{
-  Logical indicating if extra information on progress should be reported. Ignored if \code{parallel=TRUE}.
+  If \code{TRUE}, fitting progress is printed via \code{\link{txtProgressBar}}. Ignored if \code{parallel=TRUE}.
 }
 }
 \value{
@@ -126,7 +130,7 @@ Cmat <- svd(matrix(rnorm(mydim[3]*nf[3]),mydim[3],nf[3]),nu=nf[3])$u
 Gmat <- array(rnorm(prod(nf)),dim=nf)
 Xmat <- array(tcrossprod(Amat\%*\%matrix(Gmat,nf[1],nf[2]*nf[3]),kronecker(Cmat,Bmat)),dim=mydim)
 Emat <- array(rnorm(prod(mydim)),dim=mydim)
-Emat <- nscale(Emat,0,sumsq(Xmat))   # SNR=1
+Emat <- nscale(Emat, 0, ssnew = sumsq(Xmat))   # SNR=1
 X <- Xmat + Emat
 
 # fit Tucker model
@@ -177,7 +181,7 @@ Gmat <- array(rnorm(prod(nf)),dim=nf)
 Xmat <- array(tcrossprod(Amat\%*\%matrix(Gmat,nf[1],prod(nf[2:4])),
                       kronecker(Dmat,kronecker(Cmat,Bmat))),dim=mydim)
 Emat <- array(rnorm(prod(mydim)),dim=mydim)
-Emat <- nscale(Emat,0,sumsq(Xmat))   # SNR=1
+Emat <- nscale(Emat, 0, ssnew = sumsq(Xmat))   # SNR=1
 X <- Xmat + Emat
 
 # fit Tucker model
@@ -203,7 +207,7 @@ Cmat <- svd(matrix(rnorm(mydim[3]*nf[3]),mydim[3],nf[3]),nu=nf[3])$u
 Gmat <- array(rnorm(prod(nf)),dim=nf)
 Xmat <- array(tcrossprod(Amat\%*\%matrix(Gmat,nf[1],nf[2]*nf[3]),kronecker(Cmat,Bmat)),dim=mydim)
 Emat <- array(rnorm(prod(mydim)),dim=mydim)
-Emat <- nscale(Emat,0,sumsq(Xmat))   # SNR=1
+Emat <- nscale(Emat, 0, ssnew = sumsq(Xmat))   # SNR=1
 X <- Xmat + Emat
 
 # fit Tucker model (10 random starts -- sequential computation)
@@ -212,12 +216,15 @@ system.time({tuck <- tucker(X,nfac=nf)})
 tuck$Rsq
 
 # fit Tucker model (10 random starts -- parallel computation)
-set.seed(1)
 cl <- makeCluster(detectCores())
 ce <- clusterEvalQ(cl,library(multiway))
+clusterSetRNGStream(cl, 1)
 system.time({tuck <- tucker(X,nfac=nf,parallel=TRUE,cl=cl)})
 tuck$Rsq
 stopCluster(cl)
 }
 
 }
+
+\keyword{ models }% use one of  RShowDoc("KEYWORDS")
+\keyword{ multivariate }% use one of  RShowDoc("KEYWORDS")

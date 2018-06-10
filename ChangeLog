@@ -1,3 +1,54 @@
+Changes from ver 1.0-4 to ver 1.0-5     [June-10-2018]
+   1) multiway-package
+	*   Package file is now update-to-date with Description file
+	*   Changes in defaults of nscale (now uses root mean square of 1)
+        *   nrescale was removed (nscale has been preferred since ver 1.0-1) 
+        *   Improvements to all of the rescaling and resigning functions
+	*   Updates to indscal function (similar to parafac and parafac2)
+        *   Added function mcr = multiway covariates regression
+	*   Now offers 24 possible constraints for parafac and parafac2
+            which are fit via the cmls function (in CMLS package)
+	*   Internal improvements for fitting parafac and parafac2
+	*   Afixed, Astart, and Astruc arguments added for parafac
+        *   Changes to const.control, print.parafac, and print.parafac2
+        *   Added *modes inputs to parafac and parafac2
+   2) const.control
+	*   No longer has argument "nonneg". Note that non-negativity is 
+            now controlled via "const" argument for smoothness constraints.
+        *   Added the argument "intercept".
+   3) const (from CMLS package)
+        *   Prints/returns the six letter constraint code and corresponding description.
+        *   Default prints all 24 possible constraint options.
+   4) indscal
+        *   Several new arguments added to reflect updates to parafac function.
+        *   Change in default functionality (non-negativity now imposed on C)
+        *   No longer allows for unconstrained Mode C update.
+   5) cmls (from CMLS package)
+        *   Function for constrained multivariate least squares.
+        *   Used for fitting constrained ALS algorithm in parafac and parafac2.
+   6) mcr
+        *   Function for fitting multiway covariates regression model.
+        *   Allows for constraints on the parameters (via cmls).
+   7) nscale
+        *   New default uses newscale, which is desired root-mean-square
+        *   Old input ssnew (sum-of-squares) is still allowed.
+   8) parafac
+	*   Now offers 24 possible constraints (see ?const)
+	*   Internal improvements for fitting (via cmls)
+	*   Added arguments Afixed, Astart, and Astruc
+	*   Added *modes arguments for specifying unimodality constraints
+   9) parafac2
+	*   Now offers 24 possible constraints (see ?const)
+	*   Internal improvements for fitting (via cmls)
+	*   Added *modes arguments for specifying unimodality constraints
+  10) rescale and resign
+	*   Now checks to ensure new scale and sign are non-zero
+	*   Can handle degenerate solutions with a column of zeros in weights.
+
+
+
+
+
 Changes from ver 1.0-3 to ver 1.0-4     [Nov-13-2017]
    1) multiway-package
 	*   Bug fix: parafac2 initialization with nfac = 1

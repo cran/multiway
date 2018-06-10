@@ -4,9 +4,10 @@ tucker_4wayna <-
            Dfixed=NULL,Bstart=NULL,Cstart=NULL,Dstart=NULL){
     # 4-way Tucker model
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: November 12, 2017
+    # last updated: May 26, 2018
     
     ### initialize missing data
+    xcx.nona <- sumsq(data, na.rm = TRUE)
     data[naid] <- rnorm(length(naid))
     xcx <- sum(data^2)
     
@@ -38,7 +39,7 @@ tucker_4wayna <-
     } else {Dold <- Dnew <- Dfixed}
     
     ### iterative update of matrices
-    vtol <- sseold <- xcx
+    vtol <- sseold <- xcx + ctol
     iter <- 0
     cflag <- NA
     while(vtol>ctol && iter<maxit) {
@@ -92,7 +93,7 @@ tucker_4wayna <-
     GCV <- (ssenew/pxdim) / (1 - sum(edf)/pxdim)^2
     
     ### collect results
-    Rsq <- 1 - ssenew/xcx
+    Rsq <- 1 - ssenew / xcx.nona
     if(is.na(cflag)){
       if(vtol<=ctol){cflag <- 0} else {cflag <- 1}
     }

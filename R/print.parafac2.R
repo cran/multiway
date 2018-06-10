@@ -1,14 +1,13 @@
 print.parafac2 <- 
   function(x, ...){
     
-    conlab <- c("none", "orthogonal", "nonnegative", "unimodal", "monotonic", "periodic", "smooth", "fixed", "structure")
-    nway <- ifelse(is.null(x$D),3,4)
+    nway <- ifelse(is.null(x$D), 3, 4)
     nfac <- ncol(x$B)
     fixedID <- which(x$fixed)
-    if(length(fixedID) > 0) x$const[fixedID] <- 7
+    if(length(fixedID) > 0) x$const[fixedID] <- "fixed"
     strucID <- which(x$struc)
-    if(length(strucID) > 0) x$const[strucID] <- 8
-    cvec <- data.frame(t(conlab[x$const + 1]), row.names="")
+    if(length(strucID) > 0) x$const[strucID] <- paste(x$const[strucID], "struct", sep = "+")
+    cvec <- data.frame(t(x$const), row.names="")
     names(cvec) <- LETTERS[1:nway]
     cat(paste0("\n",nway,"-way Parafac2 with ",nfac," factors"),"\n")
     cat("\nConstraints:\n")

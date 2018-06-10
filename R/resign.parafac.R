@@ -2,7 +2,7 @@ resign.parafac <-
   function(x, mode="A", newsign=1, absorb="C", ...){
     # Resigns Weights of fit Parafac model
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: August 19, 2015    
+    # last updated: May 25, 2018
     
     # check mode and absorb
     mode <- mode[1]
@@ -20,11 +20,13 @@ resign.parafac <-
     nfac <- ncol(x$A)
     newsign <- sign(newsign)
     if(length(newsign)!=nfac) newsign <- rep(newsign[1],nfac)
+    if(any(newsign == 0)) stop("Input 'newsign' must contain entries of c(-1, 1).")
     
     # resign factors
     if(mode=="A"){
       
       Asign <- sign(colMeans(x$A^3))
+      if(any(Asign == 0)) Asign[Asign == 0] <- 1
       svec <- newsign*Asign
       if(nfac==1L) { Smat <- matrix(svec) } else { Smat <- diag(svec) }
       x$A <- x$A %*% Smat
@@ -40,6 +42,7 @@ resign.parafac <-
     } else if(mode=="B"){
       
       Bsign <- sign(colMeans(x$B^3))
+      if(any(Bsign == 0)) Bsign[Bsign == 0] <- 1
       svec <- newsign*Bsign
       if(nfac==1L) { Smat <- matrix(svec) } else { Smat <- diag(svec) }
       x$B <- x$B %*% Smat
@@ -55,6 +58,7 @@ resign.parafac <-
     } else if(mode=="C"){
       
       Csign <- sign(colMeans(x$C^3))
+      if(any(Csign == 0)) Csign[Csign == 0] <- 1
       svec <- newsign*Csign
       if(nfac==1L) { Smat <- matrix(svec) } else { Smat <- diag(svec) }
       x$C <- x$C %*% Smat
@@ -70,6 +74,7 @@ resign.parafac <-
     } else if(mode=="D"){
       
       Dsign <- sign(colMeans(x$D^3))
+      if(any(Dsign == 0)) Dsign[Dsign == 0] <- 1
       svec <- newsign*Dsign
       if(nfac==1L) { Smat <- matrix(svec) } else { Smat <- diag(svec) }
       x$D <- x$D %*% Smat
