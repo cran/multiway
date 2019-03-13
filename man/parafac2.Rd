@@ -187,7 +187,7 @@ The \code{\link{cmls}} function (from \bold{CMLS} package) is called as a part o
 set.seed(3)
 mydim <- c(NA, 10, 20)
 nf <- 2
-nk <- sample(c(50, 100, 200), mydim[3], replace = TRUE)
+nk <- rep(c(50, 100, 200), length.out = mydim[3])
 Gmat <- matrix(rnorm(nf^2), nrow = nf, ncol = nf)
 Bmat <- matrix(runif(mydim[2]*nf), nrow = mydim[2], ncol = nf)
 Cmat <- matrix(runif(mydim[3]*nf), nrow = mydim[3], ncol = nf)
@@ -240,7 +240,7 @@ sse / (sum(nk) * mydim[2])
 set.seed(4)
 mydim <- c(NA, 10, 20, 5)
 nf <- 3
-nk <- sample(c(50,100,200), mydim[4], replace=TRUE)
+nk <- rep(c(50,100,200), length.out = mydim[4])
 Gmat <- matrix(rnorm(nf^2), nrow = nf, ncol = nf)
 Bmat <- scale(matrix(rnorm(mydim[2]*nf), nrow = mydim[2], ncol = nf), center = FALSE)
 cseq <- seq(-3, 3, length=mydim[3])
@@ -280,7 +280,7 @@ pfac$Phi
 set.seed(3)
 mydim <- c(NA, 10, 20)
 nf <- 2
-nk <- sample(c(50, 100, 200), mydim[3], replace = TRUE)
+nk <- rep(c(50, 100, 200), length.out = mydim[3])
 Gmat <- matrix(rnorm(nf^2), nrow = nf, ncol = nf)
 Bmat <- matrix(runif(mydim[2]*nf), nrow = mydim[2], ncol = nf)
 Cmat <- matrix(runif(mydim[3]*nf), nrow = mydim[3], ncol = nf)

@@ -13,7 +13,7 @@
 The DESCRIPTION file:
 \packageDESCRIPTION{multiway}
 \packageIndices{multiway}
-\code{\link{indscal}} fits the Individual Differences Scaling model. \code{\link{mcr}} fits the Multiway Covariates Regression model. \code{\link{parafac}} fits the 3-way and 4-way Parallel Factor Analysis-1 model. \code{\link{parafac2}} fits the 3-way and 4-way Parallel Factor Analysis-2 model. \code{\link{sca}} fits the four different Simultaneous Component Analysis models. \code{\link{tucker}} fits the 3-way and 4-way Tucker Factor Analysis model.
+\code{\link{cpd}} computes the N-way Canonical Polyadic Decomposition of a tensor. \code{\link{indscal}} fits the Individual Differences Scaling model. \code{\link{mcr}} fits the Multiway Covariates Regression model. \code{\link{parafac}} fits the 3-way and 4-way Parallel Factor Analysis-1 model. \code{\link{parafac2}} fits the 3-way and 4-way Parallel Factor Analysis-2 model. \code{\link{sca}} fits the four different Simultaneous Component Analysis models. \code{\link{tucker}} fits the 3-way and 4-way Tucker Factor Analysis model.
 }
 \author{
 \packageAuthor{multiway}
@@ -44,6 +44,8 @@ Helwig, N. E. (2017). Estimating latent trends in multivariate longitudinal data
 
 Helwig, N. E. (in prep). Constrained parallel factor analysis via the R package multiway.
 
+Hitchcock, F. L. (1927). The expression of a tensor or a polyadic as a sum of products. \emph{Journal of Mathematics and Physics, 6}, 164-189.
+
 Kiers, H. A. L., ten Berge, J. M. F., & Bro, R. (1999). PARAFAC2-part I: A direct-fitting algorithm for the PARAFAC2 model. \emph{Journal of Chemometrics, 13}, 275-294.
 
 Kroonenberg, P. M., & de Leeuw, J. (1980). Principal component analysis of three-mode data by means of alternating least squares algorithms. \emph{Psychometrika, 45}, 69-97.
@@ -71,5 +73,12 @@ Tucker, L. R. (1966). Some mathematical notes on three-mode factor analysis. \em
 \code{\link[CMLS:CMLS-package]{CMLS}} ~~
 }
 \examples{
-# See examples for indscal, mcr, parafac, parafac2, sca, and tucker
+# See examples for... 
+#   cpd (Canonical Polyadic Decomposition)
+#   indscal (INividual Differences SCALing)
+#   mcr (Multiway Covariates Regression)
+#   parafac (Parallel Factor Analysis-1)
+#   parafac2 (Parallel Factor Analysis-2)
+#   sca (Simultaneous Component Analysis)
+#   tucker (Tucker Factor Analysis)
 }

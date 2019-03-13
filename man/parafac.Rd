@@ -145,6 +145,8 @@ Harshman, R. A., & Lundy, M. E. (1994). PARAFAC: Parallel factor analysis. \emph
 Helwig, N. E. (2017). Estimating latent trends in multivariate longitudinal data via Parafac2 with functional and structural constraints. \emph{Biometrical Journal, 59}(4), 783-803.
 
 Helwig, N. E. (in prep). Constrained parallel factor analysis via the R package multiway.
+
+Hitchcock, F. L. (1927). The expression of a tensor or a polyadic as a sum of products. \emph{Journal of Mathematics and Physics, 6}, 164-189.
 }
 \author{
 Nathaniel E. Helwig <helwig@umn.edu>
@@ -163,6 +165,8 @@ The algorithm can perform poorly if the number of factors \code{nfac} is set too
 }
 
 \seealso{
+The \code{\link{cpd}} function implements an N-way extension without constraints.
+
 The \code{\link{fitted.parafac}} function creates the model-implied fitted values from a fit \code{"parafac"} object.
 
 The \code{\link{resign.parafac}} function can be used to resign factors from a fit \code{"parafac"} object.

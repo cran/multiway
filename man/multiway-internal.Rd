@@ -5,6 +5,8 @@
 \name{multiway-internal}
 
 %% List of Internal Functions Called
+\alias{cpd_nway}
+\alias{cpd_nwayna}
 \alias{ed2sp}
 \alias{initcmls}
 \alias{mcr_parafac}

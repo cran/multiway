@@ -1,4 +1,5 @@
 \name{fitted}
+\alias{fitted.cpd}
 \alias{fitted.indscal}
 \alias{fitted.mcr}
 \alias{fitted.parafac}
@@ -13,6 +14,7 @@ Extract Multi-Way Fitted Values
 Calculates fitted array (or list of arrays) from a \code{multiway} object.
 }
 \usage{
+\method{fitted}{cpd}(object, ...)
 \method{fitted}{indscal}(object, ...)
 \method{fitted}{mcr}(object, type = c("X", "Y"), ...)
 \method{fitted}{parafac}(object, ...)
@@ -22,7 +24,7 @@ Calculates fitted array (or list of arrays) from a \code{multiway} object.
 }
 \arguments{
   \item{object}{
-  	Object of class "indscal" (output from \code{\link{indscal}}), class "mcr" (output from \code{\link{mcr}}), class "parafac" (output from \code{\link{parafac}}), class "parafac2" (output from \code{\link{parafac2}}), class "sca" (output from \code{\link{sca}}), or class "tucker" (output from \code{\link{tucker}}).
+  	Object of class "cpd" (output from \code{\link{cpd}}), "indscal" (output from \code{\link{indscal}}), class "mcr" (output from \code{\link{mcr}}), class "parafac" (output from \code{\link{parafac}}), class "parafac2" (output from \code{\link{parafac2}}), class "sca" (output from \code{\link{sca}}), or class "tucker" (output from \code{\link{tucker}}).
 }
   \item{simplify}{
   For "parafac2", setting \code{simplify = FALSE} will always return a list of fitted arrays. Default of \code{simplify = TRUE} returns a fitted array if all levels of the nesting mode have the same number of observations (and a list of fitted arrays otherwise).
@@ -35,6 +37,8 @@ Calculates fitted array (or list of arrays) from a \code{multiway} object.
 }
 }
 \value{
+  "cpd" objects: N-way array.
+  
   "indscal" objects: 3-way array.
   
   "mcr" objects: 3-way (X) or 2-way (Y) array.
@@ -48,14 +52,19 @@ Calculates fitted array (or list of arrays) from a \code{multiway} object.
   "tucker" objects: 3-way or 4-way array.
 }
 \details{
-	See \code{\link{indscal}}, \code{\link{mcr}}, \code{\link{parafac}}, \code{\link{parafac2}}, \code{\link{sca}}, and \code{\link{tucker}} for more details.
+	See \code{\link{cpd}}, \code{\link{indscal}}, \code{\link{mcr}}, \code{\link{parafac}}, \code{\link{parafac2}}, \code{\link{sca}}, and \code{\link{tucker}} for more details.
 }
 \author{
 Nathaniel E. Helwig <helwig@umn.edu>
 }
 \examples{
-
-### see examples for indscal, mcr, parafac, parafac2, sca, and tucker
-
+# See examples for... 
+#   cpd (Canonical Polyadic Decomposition)
+#   indscal (INividual Differences SCALing)
+#   mcr (Multiway Covariates Regression)
+#   parafac (Parallel Factor Analysis-1)
+#   parafac2 (Parallel Factor Analysis-2)
+#   sca (Simultaneous Component Analysis)
+#   tucker (Tucker Factor Analysis)
 }
 

@@ -120,31 +120,37 @@ Input matrices in \code{Afixed}, \code{Bfixed}, \code{Cfixed}, \code{Dfixed}, \c
 \examples{
 ##########   3-way example   ##########
 
-# create random data array with Tucker structure
+####****####   TUCKER3   ####****####
+
+# create random data array with Tucker3 structure
 set.seed(3)
 mydim <- c(50,20,5)
 nf <- c(3,2,3)
-Amat <- svd(matrix(rnorm(mydim[1]*nf[1]),mydim[1],nf[1]),nu=nf[1])$u
-Bmat <- svd(matrix(rnorm(mydim[2]*nf[2]),mydim[2],nf[2]),nu=nf[2])$u
-Cmat <- svd(matrix(rnorm(mydim[3]*nf[3]),mydim[3],nf[3]),nu=nf[3])$u
-Gmat <- array(rnorm(prod(nf)),dim=nf)
-Xmat <- array(tcrossprod(Amat\%*\%matrix(Gmat,nf[1],nf[2]*nf[3]),kronecker(Cmat,Bmat)),dim=mydim)
-Emat <- array(rnorm(prod(mydim)),dim=mydim)
+Amat <- matrix(rnorm(mydim[1]*nf[1]), mydim[1], nf[1])
+Amat <- svd(Amat, nu = nf[1], nv = 0)$u
+Bmat <- matrix(rnorm(mydim[2]*nf[2]), mydim[2], nf[2])
+Bmat <- svd(Bmat, nu = nf[2], nv = 0)$u
+Cmat <- matrix(rnorm(mydim[3]*nf[3]), mydim[3], nf[3])
+Cmat <- svd(Cmat, nu = nf[3], nv = 0)$u
+Gmat <- matrix(rnorm(prod(nf)), nf[1], prod(nf[2:3]))
+Xmat <- tcrossprod(Amat \%*\% Gmat, kronecker(Cmat, Bmat))
+Xmat <- array(Xmat, dim = mydim)
+Emat <- array(rnorm(prod(mydim)), dim = mydim)
 Emat <- nscale(Emat, 0, ssnew = sumsq(Xmat))   # SNR=1
 X <- Xmat + Emat
 
-# fit Tucker model
-tuck <- tucker(X,nfac=nf,nstart=1)
+# fit Tucker3 model
+tuck <- tucker(X, nfac = nf, nstart = 1)
 tuck
 
 # check solution
 Xhat <- fitted(tuck)
-sum((Xmat-Xhat)^2)/prod(mydim)
+sum((Xmat-Xhat)^2) / prod(mydim)
 
 # reorder mode="A"
 tuck$A[1:4,]
 tuck$G
-tuck <- reorder(tuck, neworder=c(3,1,2), mode="A")
+tuck <- reorder(tuck, neworder = c(3,1,2), mode = "A")
 tuck$A[1:4,]
 tuck$G
 Xhat <- fitted(tuck)
@@ -165,6 +171,72 @@ tuck <- resign(tuck, mode="C")
 tuck$C[1:4,]
 Xhat <- fitted(tuck)
 sum((Xmat-Xhat)^2)/prod(mydim)
+
+
+####****####   TUCKER2   ####****####
+
+# create random data array with Tucker2 structure
+set.seed(3)
+mydim <- c(50, 20, 5)
+nf <- c(3, 2, mydim[3])
+Amat <- matrix(rnorm(mydim[1]*nf[1]), mydim[1], nf[1])
+Amat <- svd(Amat, nu = nf[1], nv = 0)$u
+Bmat <- matrix(rnorm(mydim[2]*nf[2]), mydim[2], nf[2])
+Bmat <- svd(Bmat, nu = nf[2], nv = 0)$u
+Cmat <- diag(nf[3])
+Gmat <- matrix(rnorm(prod(nf)), nf[1], prod(nf[2:3]))
+Xmat <- tcrossprod(Amat \%*\% Gmat, kronecker(Cmat, Bmat))
+Xmat <- array(Xmat, dim = mydim)
+Emat <- array(rnorm(prod(mydim)), dim = mydim)
+Emat <- nscale(Emat, 0, ssnew = sumsq(Xmat))   # SNR=1
+X <- Xmat + Emat
+
+# fit Tucker2 model
+tuck <- tucker(X, nfac = nf, nstart = 1, Cfixed = diag(nf[3]))
+tuck
+
+# check solution
+Xhat <- fitted(tuck)
+sum((Xmat-Xhat)^2) / prod(mydim)
+
+
+####****####   TUCKER1   ####****####
+
+# create random data array with Tucker1 structure
+set.seed(3)
+mydim <- c(50, 20, 5)
+nf <- c(3, mydim[2:3])
+Amat <- matrix(rnorm(mydim[1]*nf[1]), mydim[1], nf[1])
+Amat <- svd(Amat, nu = nf[1], nv = 0)$u
+Bmat <- diag(nf[2])
+Cmat <- diag(nf[3])
+Gmat <- matrix(rnorm(prod(nf)), nf[1], prod(nf[2:3]))
+Xmat <- tcrossprod(Amat \%*\% Gmat, kronecker(Cmat, Bmat))
+Xmat <- array(Xmat, dim = mydim)
+Emat <- array(rnorm(prod(mydim)), dim = mydim)
+Emat <- nscale(Emat, 0, ssnew = sumsq(Xmat))   # SNR=1
+X <- Xmat + Emat
+
+# fit Tucker1 model
+tuck <- tucker(X, nfac = nf, nstart = 1,
+               Bfixed = diag(nf[2]), Cfixed = diag(nf[3]))
+tuck
+
+# check solution
+Xhat <- fitted(tuck)
+sum((Xmat-Xhat)^2) / prod(mydim)
+
+# closed-form Tucker1 solution via SVD
+tsvd <- svd(matrix(X, nrow = mydim[1]), nu = nf[1], nv = nf[1])
+Gmat0 <- t(tsvd$v \%*\% diag(tsvd$d[1:nf[1]]))
+Xhat0 <- array(tsvd$u \%*\% Gmat0, dim = mydim)
+sum((Xmat-Xhat0)^2) / prod(mydim)
+
+# get Mode A weights and core array 
+tuck0 <- NULL
+tuck0$A <- tsvd$u                   # A weights
+tuck0$G <- array(Gmat0, dim = nf)   # core array
+
 
 
 ##########   4-way example   ##########

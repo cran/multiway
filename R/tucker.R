@@ -7,7 +7,7 @@ tucker <-
     # 3-way or 4-way Tucker model
     # via alternating least squares (ALS) with optional constraints
     # Nathaniel E. Helwig (helwig@umn.edu)
-    # last updated: May 25, 2018
+    # last updated: July 10, 2018
     
     # check 'X' input
     xdim <- dim(X)
@@ -30,8 +30,11 @@ tucker <-
     if(nstart<1L){stop("Input 'nstart' must be positive integer")}
     
     # check feasibility of 'nfac' input
+    fixed <- !c(is.null(Afixed), is.null(Bfixed), 
+                is.null(Cfixed), is.null(Dfixed))
     checks <- rep(FALSE, length(xdim))
-    for(j in 1:length(xdim)) checks[j] <- nfac[j] > prod(nfac[-j])
+    #for(j in 1:length(xdim)) checks[j] <- nfac[j] > prod(nfac[-j])
+    for(j in 1:length(xdim)) if(!fixed[j]) checks[j] <- nfac[j] > prod(nfac[-j])
     if(any(checks)) stop("Input 'nfac' is infeasible:  need nfac[j] <= prod(nfac[-j]) for all j.")
     
     # check 'maxit' and 'ctol' inputs
@@ -44,29 +47,29 @@ tucker <-
     if(!is.null(Afixed)){
       Afixed <- as.matrix(Afixed)
       if(nrow(Afixed)!=xdim[1]){stop("Input 'Afixed' must have the same number of rows as dim(X)[1]")}
-      if(ncol(Afixed)!=nfac){stop("Input 'Afixed' must have 'nfac' columns")}
+      if(ncol(Afixed)!=nfac[1]){stop("Input 'Afixed' must have 'nfac[1]' columns")}
     }
     if(!is.null(Bfixed)){
       Bfixed <- as.matrix(Bfixed)
       if(nrow(Bfixed)!=xdim[2]){stop("Input 'Bfixed' must have the same number of rows as dim(X)[2]")}
-      if(ncol(Bfixed)!=nfac){stop("Input 'Bfixed' must have 'nfac' columns")}
+      if(ncol(Bfixed)!=nfac[2]){stop("Input 'Bfixed' must have 'nfac[2]' columns")}
     }
     if(!is.null(Cfixed)){
       Cfixed <- as.matrix(Cfixed)
       if(nrow(Cfixed)!=xdim[3]){stop("Input 'Cfixed' must have the same number of rows as dim(X)[3]")}
-      if(ncol(Cfixed)!=nfac){stop("Input 'Cfixed' must have 'nfac' columns")}
+      if(ncol(Cfixed)!=nfac[3]){stop("Input 'Cfixed' must have 'nfac[3]' columns")}
     }
     
     # check 'Bstart' and 'Cstart' inputs
     if(!is.null(Bstart)){
       Bstart <- as.matrix(Bstart)
       if(nrow(Bstart)!=xdim[2]){stop("Input 'Bstart' must have the same number of rows as dim(X)[2]")}
-      if(ncol(Bstart)!=nfac){stop("Input 'Bstart' must have 'nfac' columns")}
+      if(ncol(Bstart)!=nfac[2]){stop("Input 'Bstart' must have 'nfac[2]' columns")}
     }
     if(!is.null(Cstart)){
       Cstart <- as.matrix(Cstart)
       if(nrow(Cstart)!=xdim[3]){stop("Input 'Cstart' must have the same number of rows as dim(X)[3]")}
-      if(ncol(Cstart)!=nfac){stop("Input 'Cstart' must have 'nfac' columns")}
+      if(ncol(Cstart)!=nfac[3]){stop("Input 'Cstart' must have 'nfac[3]' columns")}
     }
     
     # check 'parallel' and 'cl' inputs
@@ -113,12 +116,12 @@ tucker <-
       if(!is.null(Dfixed)){
         Dfixed <- as.matrix(Dfixed)
         if(nrow(Dfixed)!=xdim[4]){stop("Input 'Dfixed' must have the same number of rows as dim(X)[4]")}
-        if(ncol(Dfixed)!=nfac){stop("Input 'Dfixed' must have 'nfac' columns")}
+        if(ncol(Dfixed)!=nfac[4]){stop("Input 'Dfixed' must have 'nfac[4]' columns")}
       }
       if(!is.null(Dstart)){
         Dstart <- as.matrix(Dstart)
         if(nrow(Dstart)!=xdim[4]){stop("Input 'Dstart' must have the same number of rows as dim(X)[4]")}
-        if(ncol(Dstart)!=nfac){stop("Input 'Dstart' must have 'nfac' columns")}
+        if(ncol(Dstart)!=nfac[4]){stop("Input 'Dstart' must have 'nfac[4]' columns")}
       }
       if(parallel){
         nstartlist <- vector("list",nstart)

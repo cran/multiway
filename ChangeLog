@@ -1,3 +1,26 @@
+Changes from ver 1.0-5 to ver 1.0-6     [March-12-2019]
+   1) multiway-package
+        *   Added cpd = canonical polyadic decomposition (N-way)
+   	*   Added examples to Tucker help files (Tucker1 and Tucker2).
+        *   Bug fix for tucker checks with fixed or starting weights.
+   	*   Modified examples for parafac2 and sca help files.
+   2) cpd
+        *   Function for fitting N-way canonical polyadic decomposition.
+        *   This is an N-way generalization of the parafac function.
+   3) parafac2
+   	*   Modified the data generation code for help files.
+   	*   No longer calls the sample function to generate data.
+   4) sca
+   	*   Modified the data generation code for help files.
+   	*   No longer calls the sample function to generate data.
+   5) tucker
+   	*   Bug fix (checks with Fixed or Start weights)
+   	*   Added Tucker2 and Tucker1 examples to help file
+
+
+
+
+
 Changes from ver 1.0-4 to ver 1.0-5     [June-10-2018]
    1) multiway-package
 	*   Package file is now update-to-date with Description file
