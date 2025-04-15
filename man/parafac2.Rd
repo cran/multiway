@@ -26,7 +26,7 @@ parafac2(X, nfac, nstart = 10, const = NULL, control = NULL,
   Number of random starts.
 }
   \item{const}{
-  Character vector of length 3 or 4 giving the constraints for each mode (defaults to unconstrained). See \code{\link{const}} for the 24 available options. 
+  Character vector of length 3 or 4 giving the constraints for each mode (defaults to unconstrained). See \code{\link[CMLS]{const}} for the 24 available options. 
 }
 \item{control}{
   List of parameters controlling options for smoothness constraints. This is passed to \code{\link{const.control}}, which describes the available options.
@@ -98,7 +98,7 @@ parafac2(X, nfac, nstart = 10, const = NULL, control = NULL,
   If \code{TRUE}, fitting progress is printed via \code{\link{txtProgressBar}}. Ignored if \code{parallel=TRUE}.
 }
   \item{backfit}{
-  Should backfitting algorithm be used for \code{\link{cmls}}?
+  Should backfitting algorithm be used for \code{\link[CMLS]{cmls}}?
 }
 }
 
@@ -143,13 +143,11 @@ Otherwise returns a list of length \code{nstart} where each element is an object
 \references{
 Harshman, R. A. (1972). PARAFAC2: Mathematical and technical notes. \emph{UCLA Working Papers in Phonetics, 22}, 30-44.
 
-Helwig, N. E. (2013). The special sign indeterminacy of the direct-fitting Parafac2 model: Some implications, cautions, and recommendations, for Simultaneous Component Analysis. \emph{Psychometrika, 78}, 725-739.
+Helwig, N. E. (2013). The special sign indeterminacy of the direct-fitting Parafac2 model: Some implications, cautions, and recommendations, for Simultaneous Component Analysis. \emph{Psychometrika, 78}, 725-739. \doi{10.1007/S11336-013-9331-7}
 
-Helwig, N. E. (2017). Estimating latent trends in multivariate longitudinal data via Parafac2 with functional and structural constraints. \emph{Biometrical Journal, 59}(4), 783-803.
+Helwig, N. E. (2017). Estimating latent trends in multivariate longitudinal data via Parafac2 with functional and structural constraints. \emph{Biometrical Journal, 59}(4), 783-803. \doi{10.1002/bimj.201600045}
 
-Helwig, N. E. (in prep). Constrained parallel factor analysis via the R package multiway.
-
-Kiers, H. A. L., ten Berge, J. M. F., & Bro, R. (1999). PARAFAC2-part I: A direct-fitting algorithm for the PARAFAC2 model. \emph{Journal of Chemometrics, 13}, 275-294.
+Kiers, H. A. L., ten Berge, J. M. F., & Bro, R. (1999). PARAFAC2-part I: A direct-fitting algorithm for the PARAFAC2 model. \emph{Journal of Chemometrics, 13}, 275-294. \doi{10.1002/(SICI)1099-128X(199905/08)13:3/4<275::AID-CEM543>3.0.CO;2-B}
 }
 \author{
 Nathaniel E. Helwig <helwig@umn.edu>
@@ -177,7 +175,7 @@ The \code{\link{rescale.parafac2}} function can be used to rescale factors from 
 
 The \code{\link{reorder.parafac2}} function can be used to reorder factors from a fit \code{"parafac2"} object.
 
-The \code{\link{cmls}} function (from \bold{CMLS} package) is called as a part of the alternating least squares algorithm.
+The \code{\link[CMLS]{cmls}} function (from \bold{CMLS} package) is called as a part of the alternating least squares algorithm.
 }
 
 \examples{

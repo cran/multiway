@@ -24,7 +24,7 @@ Divide by number of factors (default) or core sum of squares.
 Returns CORCONDIA value.
 }
 \references{
-Bro, R., & Kiers, H.A.L. (2003). A new efficient method for determining the number of components in PARAFAC models. \emph{Journal of Chemometrics, 17}, 274-286.
+Bro, R., & Kiers, H.A.L. (2003). A new efficient method for determining the number of components in PARAFAC models. \emph{Journal of Chemometrics, 17}, 274-286. \doi{10.1002/cem.801}
 }
 \author{
 Nathaniel E. Helwig <helwig@umn.edu>

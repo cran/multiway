@@ -26,7 +26,7 @@ parafac(X, nfac, nstart = 10, const = NULL, control = NULL,
   Number of random starts.
 }
   \item{const}{
-  Character vector of length 3 or 4 giving the constraints for each mode (defaults to unconstrained). See \code{\link{const}} for the 24 available options.
+  Character vector of length 3 or 4 giving the constraints for each mode (defaults to unconstrained). See \code{\link[CMLS]{const}} for the 24 available options.
 }
 \item{control}{
   List of parameters controlling options for smoothness constraints. This is passed to \code{\link{const.control}}, which describes the available options.
@@ -98,7 +98,7 @@ parafac(X, nfac, nstart = 10, const = NULL, control = NULL,
   If \code{TRUE}, fitting progress is printed via \code{\link{txtProgressBar}}. Ignored if \code{parallel=TRUE}.
 }
   \item{backfit}{
-  Should backfitting algorithm be used for \code{\link{cmls}}?
+  Should backfitting algorithm be used for \code{\link[CMLS]{cmls}}?
 }
 }
 
@@ -140,13 +140,11 @@ Otherwise returns a list of length \code{nstart} where each element is an object
 \references{
 Harshman, R. A. (1970). Foundations of the PARAFAC procedure: Models and conditions for an "explanatory" multimodal factor analysis. \emph{UCLA Working Papers in Phonetics, 16}, 1-84.
 
-Harshman, R. A., & Lundy, M. E. (1994). PARAFAC: Parallel factor analysis. \emph{Computational Statistics and Data Analysis, 18}, 39-72.
+Harshman, R. A., & Lundy, M. E. (1994). PARAFAC: Parallel factor analysis. \emph{Computational Statistics and Data Analysis, 18}, 39-72. \doi{10.1016/0167-9473(94)90132-5}
 
-Helwig, N. E. (2017). Estimating latent trends in multivariate longitudinal data via Parafac2 with functional and structural constraints. \emph{Biometrical Journal, 59}(4), 783-803.
+Helwig, N. E. (2017). Estimating latent trends in multivariate longitudinal data via Parafac2 with functional and structural constraints. \emph{Biometrical Journal, 59}(4), 783-803. \doi{10.1002/bimj.201600045}
 
-Helwig, N. E. (in prep). Constrained parallel factor analysis via the R package multiway.
-
-Hitchcock, F. L. (1927). The expression of a tensor or a polyadic as a sum of products. \emph{Journal of Mathematics and Physics, 6}, 164-189.
+Hitchcock, F. L. (1927). The expression of a tensor or a polyadic as a sum of products. \emph{Journal of Mathematics and Physics, 6}, 164-189. \doi{10.1002/sapm192761164}
 }
 \author{
 Nathaniel E. Helwig <helwig@umn.edu>
@@ -175,7 +173,7 @@ The \code{\link{rescale.parafac}} function can be used to rescale factors from a
 
 The \code{\link{reorder.parafac}} function can be used to reorder factors from a fit \code{"parafac"} object.
 
-The \code{\link{cmls}} function (from \bold{CMLS} package) is called as a part of the alternating least squares algorithm.
+The \code{\link[CMLS]{cmls}} function (from \bold{CMLS} package) is called as a part of the alternating least squares algorithm.
 }
 
 \examples{

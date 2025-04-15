@@ -28,7 +28,7 @@ fnnls(XtX, Xty, ntol = NULL)
 	The vector \code{b} such that \code{b[j] >= 0} for all \code{j}.
 }
 \references{
-Bro, R., & De Jong, S. (1997). A fast non-negativity-constrained least squares algorithm. \emph{Journal of Chemometrics, 11}, 393-401.
+Bro, R., & De Jong, S. (1997). A fast non-negativity-constrained least squares algorithm. \emph{Journal of Chemometrics, 11}, 393-401. 
 }
 \author{
 Nathaniel E. Helwig <helwig@umn.edu>

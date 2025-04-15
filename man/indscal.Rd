@@ -25,7 +25,7 @@ indscal(X, nfac, nstart = 10, const = NULL, control = NULL,
   Number of random starts.
 }
   \item{const}{
-  Character vector of length 2 giving the constraints for modes B and C (defaults to unconstrained for B and non-negative for C). See \code{\link{const}} for the 24 available options. Constraints for Mode C weights are limited to one of the 8 possible non-negative options.
+  Character vector of length 2 giving the constraints for modes B and C (defaults to unconstrained for B and non-negative for C). See \code{\link[CMLS]{const}} for the 24 available options. Constraints for Mode C weights are limited to one of the 8 possible non-negative options.
 }
   \item{control}{
   List of parameters controlling options for smoothness constraints. This is passed to \code{\link{const.control}}, which describes the available options.
@@ -76,7 +76,7 @@ indscal(X, nfac, nstart = 10, const = NULL, control = NULL,
   If \code{TRUE}, fitting progress is printed via \code{\link{txtProgressBar}}. Ignored if \code{parallel=TRUE}.
 }
   \item{backfit}{
-  Should backfitting algorithm be used for \code{\link{cmls}}? 
+  Should backfitting algorithm be used for \code{\link[CMLS]{cmls}}? 
 }
 }
 
@@ -108,7 +108,7 @@ If \code{output="best"}, returns an object of class \code{"indscal"} with the fo
 Otherwise returns a list of length \code{nstart} where each element is an object of class \code{"indscal"}.
 }
 \references{
-Carroll, J. D., & Chang, J-J. (1970). Analysis of individual differences in multidimensional scaling via an n-way generalization of "Eckart-Young" decomposition. \emph{Psychometrika, 35}, 283-319.
+Carroll, J. D., & Chang, J-J. (1970). Analysis of individual differences in multidimensional scaling via an n-way generalization of "Eckart-Young" decomposition. \emph{Psychometrika, 35}, 283-319. \doi{10.1007/BF02310791}
 }
 \author{
 Nathaniel E. Helwig <helwig@umn.edu>
@@ -133,7 +133,7 @@ The \code{\link{rescale.indscal}} function can be used to rescale factors from a
 
 The \code{\link{reorder.indscal}} function can be used to reorder factors from a fit \code{"indscal"} object.
 
-The \code{\link{cmls}} function (from \bold{CMLS} package) is called as a part of the alternating least squares algorithm.
+The \code{\link[CMLS]{cmls}} function (from \bold{CMLS} package) is called as a part of the alternating least squares algorithm.
 }
 
 \examples{

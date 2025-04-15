@@ -30,7 +30,7 @@ mpinv(X, tol = NULL)
 \references{
 Moore, E. H. (1920). On the reciprocal of the general algebraic matrix. Bulletin of the American Mathematical Society 26, 394-395.
 
-Penrose, R. (1950). A generalized inverse for matrices. Mathematical Proceedings of the Cambridge Philosophical Society 51, 406-413.
+Penrose, R. (1950). A generalized inverse for matrices. Mathematical Proceedings of the Cambridge Philosophical Society 51, 406-413. \doi{10.1017/S0305004100030401}
 }
 \author{
 Nathaniel E. Helwig <helwig@umn.edu>

@@ -25,7 +25,7 @@ This dataset contains yearly (1970-2013) consumption data from the 50 United Sta
 In the data source, the population age 21 and older for Mississippi in year 1989 is reported to be 3547.839 thousand, which is incorrect. In this dataset, the miscoded population value has been replaced with the average of the corresponding 1988 population (1709 thousand) and the 1990 population (1701.527 thousand). 
 }
 \source{
-\url{https://pubs.niaaa.nih.gov/publications/surveillance102/pcyr19702013.txt}
+\url{https://www.niaaa.nih.gov/publications/surveillance-reports}
 }
 \references{
 Haughwout, S. P., LaVallee, R. A., & Castle, I-J. P. (2015). 
@@ -33,7 +33,7 @@ Haughwout, S. P., LaVallee, R. A., & Castle, I-J. P. (2015).
    National, State, and Regional Trends, 1977-2013. Bethesda, MD: NIAAA,
    Alcohol Epidemiologic Data System.
    
-Helwig, N. E. (2017). Estimating latent trends in multivariate longitudinal data via Parafac2 with functional and structural constraints. \emph{Biometrical Journal, 59}(4), 783-803.
+Helwig, N. E. (2017). Estimating latent trends in multivariate longitudinal data via Parafac2 with functional and structural constraints. \emph{Biometrical Journal, 59}(4), 783-803. \doi{10.1002/bimj.201600045}
 
 Nephew, T. M., Yi, H., Williams, G. D., Stinson, F. S., & Dufour, M.C., (2004). 
    U.S. Alcohol Epidemiologic Data Reference Manual, Vol. 1, 4th ed. 

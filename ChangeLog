@@ -1,3 +1,9 @@
+Changes from ver 1.0-6 to ver 1.0-7     [April-15-2025]
+1) multiway-package
+        *   Fixed \link{} issues with several Rd files (for CMLS)
+        *   Updated references throughout package (e.g., added doi)
+
+
 Changes from ver 1.0-5 to ver 1.0-6     [March-12-2019]
    1) multiway-package
         *   Added cpd = canonical polyadic decomposition (N-way)

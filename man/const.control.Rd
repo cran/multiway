@@ -11,7 +11,7 @@ const.control(const, df = NULL, degree = NULL, intercept = NULL)
 }
 \arguments{
   \item{const}{
-Character vector of length 3 or 4 giving the constraints for each mode. See \code{\link{const}} for the 24 available options.
+Character vector of length 3 or 4 giving the constraints for each mode. See \code{\link[CMLS]{const}} for the 24 available options.
 }
   \item{df}{
 Integer vector of length 3 or 4 giving the degrees of freedom to use for the spline basis in each mode. Can also input a single number giving the common degrees of freedom to use for each mode. Defaults to 7 degrees of freedom for each applicable mode.
@@ -32,7 +32,7 @@ Nathaniel E. Helwig <helwig@umn.edu>
 \details{
 The \code{\link{mcr}}, \code{\link{parafac}}, and \code{\link{parafac2}} functions pass the input \code{const} to this function to determine the fitting options when using smoothness constraints.
 
-The \code{\link{const}} function (from \bold{CMLS} package) describes the available constraint options.
+The \code{\link[CMLS]{const}} function (from \bold{CMLS} package) describes the available constraint options.
 }
 \examples{
 ##########   EXAMPLE   ##########

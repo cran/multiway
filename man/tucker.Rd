@@ -97,9 +97,9 @@ If \code{output="best"}, returns an object of class \code{"tucker"} with the fol
 Otherwise returns a list of length \code{nstart} where each element is an object of class \code{"tucker"}.
 }
 \references{
-Kroonenberg, P. M., & de Leeuw, J. (1980). Principal component analysis of three-mode data by means of alternating least squares algorithms. \emph{Psychometrika, 45}, 69-97.
+Kroonenberg, P. M., & de Leeuw, J. (1980). Principal component analysis of three-mode data by means of alternating least squares algorithms. \emph{Psychometrika, 45}, 69-97. \doi{10.1007/BF02293599}
  
-Tucker, L. R. (1966). Some mathematical notes on three-mode factor analysis. \emph{Psychometrika, 31}, 279-311.
+Tucker, L. R. (1966). Some mathematical notes on three-mode factor analysis. \emph{Psychometrika, 31}, 279-311. \doi{10.1007/BF02289464}
 }
 \author{
 Nathaniel E. Helwig <helwig@umn.edu>

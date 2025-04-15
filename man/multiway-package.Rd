@@ -21,34 +21,32 @@ The DESCRIPTION file:
 Maintainer: \packageMaintainer{multiway}
 }
 \references{
-Bro, R., & De Jong, S. (1997). A fast non-negativity-constrained least squares algorithm. \emph{Journal of Chemometrics, 11}, 393-401.
+Bro, R., & De Jong, S. (1997). A fast non-negativity-constrained least squares algorithm. \emph{Journal of Chemometrics, 11}, 393-401. 
 
-Bro, R., & Kiers, H.A.L. (2003). A new efficient method for determining the number of components in PARAFAC models. \emph{Journal of Chemometrics, 17}, 274-286.
+Bro, R., & Kiers, H.A.L. (2003). A new efficient method for determining the number of components in PARAFAC models. \emph{Journal of Chemometrics, 17}, 274-286. \doi{10.1002/cem.801}
 
-Carroll, J. D., & Chang, J-J. (1970). Analysis of individual differences in multidimensional scaling via an n-way generalization of "Eckart-Young" decomposition. \emph{Psychometrika, 35}, 283-319.
+Carroll, J. D., & Chang, J-J. (1970). Analysis of individual differences in multidimensional scaling via an n-way generalization of "Eckart-Young" decomposition. \emph{Psychometrika, 35}, 283-319. \doi{10.1007/BF02310791}
 
 Harshman, R. A. (1970). Foundations of the PARAFAC procedure: Models and conditions for an "explanatory" multimodal factor analysis. \emph{UCLA Working Papers in Phonetics, 16}, 1-84.
 
 Harshman, R. A. (1972). PARAFAC2: Mathematical and technical notes. \emph{UCLA Working Papers in Phonetics, 22}, 30-44.
 
-Harshman, R. A., & Lundy, M. E. (1994). PARAFAC: Parallel factor analysis. \emph{Computational Statistics and Data Analysis, 18}, 39-72.
+Harshman, R. A., & Lundy, M. E. (1994). PARAFAC: Parallel factor analysis. \emph{Computational Statistics and Data Analysis, 18}, 39-72. \doi{10.1016/0167-9473(94)90132-5}
 
 Haughwout, S. P., LaVallee, R. A., & Castle, I-J. P. (2015). 
    Surveillance Report #102: Apparent Per Capita Alcohol Consumption: 
    National, State, and Regional Trends, 1977-2013. Bethesda, MD: NIAAA,
    Alcohol Epidemiologic Data System.
 
-Helwig, N. E. (2013). The special sign indeterminacy of the direct-fitting Parafac2 model: Some implications, cautions, and recommendations, for Simultaneous Component Analysis. \emph{Psychometrika, 78}, 725-739.
+Helwig, N. E. (2013). The special sign indeterminacy of the direct-fitting Parafac2 model: Some implications, cautions, and recommendations, for Simultaneous Component Analysis. \emph{Psychometrika, 78}, 725-739. \doi{10.1007/S11336-013-9331-7}
 
-Helwig, N. E. (2017). Estimating latent trends in multivariate longitudinal data via Parafac2 with functional and structural constraints. \emph{Biometrical Journal, 59}(4), 783-803.
+Helwig, N. E. (2017). Estimating latent trends in multivariate longitudinal data via Parafac2 with functional and structural constraints. \emph{Biometrical Journal, 59}(4), 783-803. \doi{10.1002/bimj.201600045}
 
-Helwig, N. E. (in prep). Constrained parallel factor analysis via the R package multiway.
+Hitchcock, F. L. (1927). The expression of a tensor or a polyadic as a sum of products. \emph{Journal of Mathematics and Physics, 6}, 164-189. \doi{10.1002/sapm192761164}
 
-Hitchcock, F. L. (1927). The expression of a tensor or a polyadic as a sum of products. \emph{Journal of Mathematics and Physics, 6}, 164-189.
+Kiers, H. A. L., ten Berge, J. M. F., & Bro, R. (1999). PARAFAC2-part I: A direct-fitting algorithm for the PARAFAC2 model. \emph{Journal of Chemometrics, 13}, 275-294. \doi{10.1002/(SICI)1099-128X(199905/08)13:3/4<275::AID-CEM543>3.0.CO;2-B}
 
-Kiers, H. A. L., ten Berge, J. M. F., & Bro, R. (1999). PARAFAC2-part I: A direct-fitting algorithm for the PARAFAC2 model. \emph{Journal of Chemometrics, 13}, 275-294.
-
-Kroonenberg, P. M., & de Leeuw, J. (1980). Principal component analysis of three-mode data by means of alternating least squares algorithms. \emph{Psychometrika, 45}, 69-97.
+Kroonenberg, P. M., & de Leeuw, J. (1980). Principal component analysis of three-mode data by means of alternating least squares algorithms. \emph{Psychometrika, 45}, 69-97. \doi{10.1007/BF02293599}
 
 Moore, E. H. (1920). On the reciprocal of the general algebraic matrix. Bulletin of the American Mathematical Society 26, 394-395.
 
@@ -58,15 +56,15 @@ Nephew, T. M., Yi, H., Williams, G. D., Stinson, F. S., & Dufour, M.C., (2004).
    Taxation, or Receipt Data. Bethesda, MD: NIAAA, Alcohol Epidemiologic Data 
    System. NIH Publication No. 04-5563.
 
-Penrose, R. (1950). A generalized inverse for matrices. Mathematical Proceedings of the Cambridge Philosophical Society 51, 406-413.
+Penrose, R. (1950). A generalized inverse for matrices. Mathematical Proceedings of the Cambridge Philosophical Society 51, 406-413. \doi{10.1017/S0305004100030401}
 
-Ramsay, J. O. (1988). Monotone regression splines in action. \emph{Statistical Science, 3}, 425-441.
+Ramsay, J. O. (1988). Monotone regression splines in action. \emph{Statistical Science, 3}, 425-441. \doi{10.1214/ss/1177012761}
 
-Smilde, A. K., & Kiers, H. A. L. (1999). Multiway covariates regression models. \emph{Journal of Chemometrics, 13}, 31-48.
+Smilde, A. K., & Kiers, H. A. L. (1999). Multiway covariates regression models. \emph{Journal of Chemometrics, 13}, 31-48. \doi{10.1002/(SICI)1099-128X(199901/02)13:1<31::AID-CEM528>3.0.CO;2-P}
 
-Timmerman, M. E., & Kiers, H. A. L. (2003). Four simultaneous component models for the analysis of multivariate time series from more than one subject to model intraindividual and interindividual differences. \emph{Psychometrika, 68}, 105-121.
+Timmerman, M. E., & Kiers, H. A. L. (2003). Four simultaneous component models for the analysis of multivariate time series from more than one subject to model intraindividual and interindividual differences. \emph{Psychometrika, 68}, 105-121. \doi{10.1007/BF02296656}
 
-Tucker, L. R. (1966). Some mathematical notes on three-mode factor analysis. \emph{Psychometrika, 31}, 279-311.
+Tucker, L. R. (1966). Some mathematical notes on three-mode factor analysis. \emph{Psychometrika, 31}, 279-311. \doi{10.1007/BF02289464}
 }
 \keyword{ package }
 \seealso{

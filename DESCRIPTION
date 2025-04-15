@@ -1,14 +1,18 @@
 Package: multiway
 Type: Package
 Title: Component Models for Multi-Way Data
-Version: 1.0-6
-Date: 2019-03-12
-Author: Nathaniel E. Helwig <helwig@umn.edu>
+Version: 1.0-7
+Date: 2025-04-15
+Authors@R: person(given = c("Nathaniel", "E."),
+                    family = "Helwig",
+                    role = c("aut", "cre"),
+                    email = "helwig@umn.edu")
 Maintainer: Nathaniel E. Helwig <helwig@umn.edu>
 Depends: CMLS, parallel
 Description: Fits multi-way component models via alternating least squares algorithms with optional constraints. Fit models include N-way Canonical Polyadic Decomposition, Individual Differences Scaling, Multiway Covariates Regression, Parallel Factor Analysis (1 and 2), Simultaneous Component Analysis, and Tucker Factor Analysis.
 License: GPL (>= 2)
 NeedsCompilation: no
-Packaged: 2019-03-12 22:41:29 UTC; Nate
+Packaged: 2025-04-15 15:15:41 UTC; nate
+Author: Nathaniel E. Helwig [aut, cre]
 Repository: CRAN
-Date/Publication: 2019-03-13 08:20:03 UTC
+Date/Publication: 2025-04-15 16:40:02 UTC

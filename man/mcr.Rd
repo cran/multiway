@@ -38,7 +38,7 @@ mcr(X, Y, nfac = 1, alpha = 0.5, nstart = 10,
   Model for \code{X}. Defaults to "parafac".
 }
   \item{const}{
-  Character vector of length 4 giving the constraints for \code{A}, \code{B}, \code{C}, and \code{D} (defaults to unconstrained). See \code{\link{const}} for the 24 available options. Ignored if \code{model = "tucker"}.
+  Character vector of length 4 giving the constraints for \code{A}, \code{B}, \code{C}, and \code{D} (defaults to unconstrained). See \code{\link[CMLS]{const}} for the 24 available options. Ignored if \code{model = "tucker"}.
 }
   \item{control}{
   List of parameters controlling options for smoothness constraints. This is passed to \code{\link{const.control}}, which describes the available options.
@@ -113,7 +113,7 @@ mcr(X, Y, nfac = 1, alpha = 0.5, nstart = 10,
   If \code{TRUE}, fitting progress is printed via \code{\link{txtProgressBar}}. Ignored if \code{parallel=TRUE}.
 }
   \item{backfit}{
-  Should backfitting algorithm be used for \code{\link{cmls}}?
+  Should backfitting algorithm be used for \code{\link[CMLS]{cmls}}?
 }
 }
 \details{
@@ -160,7 +160,7 @@ When \code{weights} are input, \code{SSE.X}, \code{SSE.Y}, \code{SSX}, and \code
 \item{G}{Core array. Only if \code{model = "tucker"}.}
 }
 \references{
-Smilde, A. K., & Kiers, H. A. L. (1999). Multiway covariates regression models, \emph{Journal of Chemometrics, 13}, 31-48.
+Smilde, A. K., & Kiers, H. A. L. (1999). Multiway covariates regression models, \emph{Journal of Chemometrics, 13}, 31-48. \doi{10.1002/(SICI)1099-128X(199901/02)13:1<31::AID-CEM528>3.0.CO;2-P}
 }
 \author{
 Nathaniel E. Helwig <helwig@umn.edu>
@@ -186,7 +186,7 @@ The \code{\link{rescale.mcr}} function can be used to rescale factors from a fit
 
 The \code{\link{reorder.mcr}} function can be used to reorder factors from a fit \code{"mcr"} object.
 
-The \code{\link{cmls}} function (from \bold{CMLS} package) is called as a part of the alternating least squares algorithm.
+The \code{\link[CMLS]{cmls}} function (from \bold{CMLS} package) is called as a part of the alternating least squares algorithm.
 
 See \code{\link{parafac}}, \code{\link{parafac2}}, and \code{\link{tucker}} for more information about the Parafac, Parafac2, and Tucker models. 
 }

@@ -75,9 +75,9 @@ where \code{Phi[[k]]} is specific to the \code{k}-th level of Mode C, \code{Phi}
 \item{rotation}{Same as input \code{rotation}.}
 }
 \references{
-Helwig, N. E. (2013). The special sign indeterminacy of the direct-fitting Parafac2 model: Some implications, cautions, and recommendations, for Simultaneous Component Analysis. \emph{Psychometrika, 78}, 725-739.
+Helwig, N. E. (2013). The special sign indeterminacy of the direct-fitting Parafac2 model: Some implications, cautions, and recommendations, for Simultaneous Component Analysis. \emph{Psychometrika, 78}, 725-739. \doi{10.1007/S11336-013-9331-7}
 
-Timmerman, M. E., & Kiers, H. A. L. (2003). Four simultaneous component models for the analysis of multivariate time series from more than one subject to model intraindividual and interindividual differences. \emph{Psychometrika, 68}, 105-121.
+Timmerman, M. E., & Kiers, H. A. L. (2003). Four simultaneous component models for the analysis of multivariate time series from more than one subject to model intraindividual and interindividual differences. \emph{Psychometrika, 68}, 105-121. \doi{10.1007/BF02296656}
 }
 \author{
 Nathaniel E. Helwig <helwig@umn.edu>
